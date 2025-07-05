@@ -133,6 +133,13 @@ def create_app():
     toolbar = DebugToolbarExtension(app)
     return app
 
+@app.route('/support', methods=['GET', 'POST'])
+def support():
+    if request.method == 'POST':
+        # Handle form submission
+        pass
+    return render_template('support.html')
+
 if __name__ == "__main__":
     app = create_app()
     app.run()

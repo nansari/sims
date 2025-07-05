@@ -3,6 +3,7 @@ from app import app
 # import socket
 # import secrets
 import logging
+from . import forms
 
 from flask import Flask, render_template, url_for, redirect, request, flash
 # from flask_debugtoolbar import DebugToolbarExtension
@@ -81,6 +82,7 @@ def select_a_batch():
 
 @app.route('/reg_from_wa_text', methods=['GET', 'POST'])
 def reg_from_wa_text():
+    """Render the reg_from_wa_text page to accept WhatsApp text."""
     form = forms.RegFromWaText()
     if request.method == 'POST':
         whatsapptext = request.form.get('whatsapptext')
@@ -116,6 +118,13 @@ def reg_from_wa_text():
         pass
     return render_template('reg_from_wa_text.html', form=form)
 
+@app.route('/support', methods=['GET', 'POST'])
+def support():
+    """Renders the support page."""
+    if request.method == 'POST':
+        # Handle form submission
+        pass
+    return render_template('support.html')
 
 @app.route('/user_reg', methods=['GET', 'POST'])
 def user_reg():
