@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Register From WhatsApp Text{% endblock %}
+
+{% block content %}
+<body>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class="flashes">
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+
+    <h1>Register From WhatsApp Text</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+            <p>{{ form.whatsapptext.label }}</p>
+            {{ form.whatsapptext()}}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+</body>
+{% endblock %}

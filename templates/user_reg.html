@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Select a Batch{% endblock %}
+
+{% block content %}
+    <body>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class="flashes">
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    
+    <h1>Register A New User</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>{{ form.batch.label }} {{ form.batch() }}</div>
+        <div>{{ form.email.label }} {{ form.email() }}</div>
+        <div>{{ form.name.label }} {{ form.name() }}</div>
+        <div>{{ form.gender.label }} {{ form.gender() }}</div>
+        <div>{{ form.yob.label }} {{ form.yob() }}</div>
+        <div>{{ form.mobile.label }} {{ form.mobile() }}</div>
+        <div>{{ form.whatsapp.label }} {{ form.hometowncity() }}</div>
+        <div>{{ form.hometowncity.label }} {{ form.hometowncity() }}</div>
+        <div>{{ form.hometowndistrict.label }} {{ form.hometowndistrict() }}</div>
+        <div>{{ form.hometownstate.label }} {{ form.hometownstate() }}</div>
+        <div>{{ form.hometowncountry.label }} {{ form.hometowncountry() }}</div>
+        <div>{{ form.residencecity.label }} {{ form.residencecity() }}</div>
+        <div>{{ form.residencestate.label }} {{ form.residencestate() }}</div>
+        <div>{{ form.residentcountry.label }} {{ form.residentcountry() }}</div>
+        <div>{{ form.residentzip.label }} {{ form.residentzip() }}</div>
+        <div>{{ form.education.label }} {{ form.education() }}</div>
+        <div>{{ form.profession.label }} {{ form.profession() }}</div>
+        <div>{{ form.referrer_id.label }} {{ form.referrer_id() }}</div>
+        <div>{{ form.status.label }} {{ form.status() }}</div>
+        <div>{{ form.bio.label }} {{ form.bio() }}</div>
+        <!-- <div>{{ form.bio.label }} {{ form.bio() }}</div> -->
+        <!-- <div>{{ form.status.label }} {{ form.status() }}</div> -->
+        <div>{{ form.submit() }} </div>
+    </form>        
+    </body>
+{% endblock %}
+
+
+<!-- 
+batch = SelectField('Select Batch', choices=Config.BATCHES)
+email = EmailField('Email', validators=[]) #TODO - add email validator
+name = TelField('Name', validators=[])
+gender = TelField('Gender', choices=['M', 'F'], validators=[])
+mobile = TelField('Mobile with country code', validators=[])
+whatsapp = TelField('WhatsApp with country code', validators=[])
+hometowncity = TelField('Hometown City', validators=[])
+hometowndistrict = TelField('Hometown District', validators=[])
+hometowncountry = TelField('Hometown Country', validators=[])
+residencecity = TelField('Current Residence City', validators=[])
+residencestate = TelField('Current Residence State', validators=[])
+residentcountry = TelField('Current Residence Country', validators=[])
+residentzip = TelField('Current Residence Pin/Zip', validators=[])
+education = TelField('Highest Education', validators=[])
+profession = TelField('Profession', validators=[])
+referrer_id = TelField('Referred By ID', validators=[])
+bio = TelField('Notes', validators=[])
+submit = SubmitField('Submit')   -->
