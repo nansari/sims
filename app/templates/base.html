@@ -87,7 +87,7 @@
         }
         .content {
             margin-left: var(--sidebar-width);
-            padding: 20px;
+            padding: 10px;
             width: 100%;
             transition: margin-left 0.3s;
         }
@@ -108,7 +108,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">QASC</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">SIMS</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -124,6 +124,9 @@
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="review">Review</a></li>
                     </ul>
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <!-- <li class="nav-item"><a class="nav-link" href="/index">Home</a></li> -->
+                    <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('support') }}">Support</a></li>
                 </ul>
             </div>
@@ -138,7 +141,16 @@
             <!-- Submenu items will be injected here by JavaScript -->
         </ul>
     </div>
-
+    <!-- <hr> -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
     <div class="content" id="main-content">
         {% block content %}{% endblock %}
     </div>

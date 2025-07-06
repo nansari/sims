@@ -1,46 +1,57 @@
+from flask import render_template, flash, redirect, url_for, request
 from app import app
-# import os
+from app.forms import LoginForm
+from flask_login import logout_user
+
+# import request
 # import socket
 # import secrets
-import logging
+# import logging
 from . import forms
 
-from flask import Flask, render_template, url_for, redirect, request, flash
 # from flask_debugtoolbar import DebugToolbarExtension
 
-# from .config import Config
-# from . import forms
-
-# from .functions.parse_wa_text import parse_wa_text
-
-# @app.route('/')
-# @app.route('/index')
-# def index():
-#     """Renders the home page."""
-#     return "Hello, World!"
-
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_migrate import Migrate
-
-# app = Flask(__name__)
-# app.config.from_object(Config)
-
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_migrate import Migrate
-
-# app = Flask(__name__)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# db = SQLAlchemy(app)
-# migrate = Migrate(app, db)
-
-
+# @app.route('/home')
 @app.route('/')
-@app.route('/home')
+@app.route('/index')
 def index():
     """Renders the home page."""
-    logging.warning("See this message in Flask Debug Toolbar!")
-    return render_template('index.html')
+    user = {'username': 'Nasim'}
+    posts = [
+        {
+            'author': {'username': 'John'},
+            'body': 'Beautiful day in Portland!'
+        },
+        {
+            'author': {'username': 'Susan'},
+            'body': 'The Avengers movie was so cool!'
+        }
+    ]
+    return render_template('index.html', title='Home', user=user, posts=posts)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Renders the login page."""
+    form = LoginForm()
+    # always False for GET method
+    if form.validate_on_submit():
+        flash(f'Login requested for user {form.username.data}, remember_me={form.remember_me.data}')
+        return redirect(url_for('index'))
+    return render_template('login.html',  title='Sign In', form=form)
+
+@app.route('/logout')
+def logout():
+    """Renders the logout page."""
+    logout_user()
+    return redirect(url_for('index'))
+
+# @app.route('/')
+# @app.route('/home')
+# def index():
+#     """Renders the home page."""
+#     logging.warning("See this message in Flask Debug Toolbar!")
+#     return render_template('index.html')
 
 @app.route('/reg_template', methods=['GET', 'POST'])
 def reg_template():

@@ -1,7 +1,7 @@
 # app/forms.py
 import datetime
 from flask_wtf import FlaskForm
-from wtforms import SelectField, SubmitField, TelField, TextAreaField, EmailField, StringField, IntegerField
+from wtforms import SelectField, SubmitField, TelField, TextAreaField, EmailField, StringField, IntegerField, PasswordField, BooleanField
 from wtforms.validators import DataRequired, InputRequired, NumberRange, Length
 
 # from app import app
@@ -10,6 +10,12 @@ from .config import Config
 
 thisyear = datetime.datetime.now().year
 
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember Me')
+    submit = SubmitField('Sign In')
+    
 class BatchForm(FlaskForm):
     """ Batch Selection Form """
     # batch = SelectField('Select Batch', choices=Config.BATCHES, coerce=str)
@@ -18,7 +24,7 @@ class BatchForm(FlaskForm):
 
 class RegFromWaText(FlaskForm):
     """ WhatsApp Registration Form """
-    whatsapptext = TextAreaField('Paste WhatsApp Registration Form', validators=[], render_kw={"rows": 35, "cols": 80})
+    whatsapptext = TextAreaField('Paste WhatsApp Registration Text in the below box.', validators=[], render_kw={"rows": 34, "cols": 100})
     submit = SubmitField('Submit')
 
 class UserRegForm(FlaskForm):
