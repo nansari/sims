@@ -3,13 +3,14 @@ import secrets
 import os
 # import socket
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 class Config:
     """Configuration class."""
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(16)
-    # DEBUG = os.environ.get('FLASK_DEBUG') or  0
-    # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-    #     'sqlite:///' + os.path.join(basedir, 'app.db')
-    # SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     BATCHES = [ 'GLB-B03', 'HYD-10', 'KARAMA-08']
     STATUS = ['CallOut', 'Active', 'Drop-Out', 'Graduated', 'NextBatch', 'On-Hold', 'Pending',]
     NATURE = ['Exited', 'Soft',]
