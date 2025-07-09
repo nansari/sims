@@ -1,12 +1,23 @@
-from datetime import datetime, timezone
-from typing import Optional
+# https://github.com/dr5hn/countries-states-cities-database
+# https://flask-sqlalchemy.readthedocs.io/en/stable/
+# http://medium.com/@ramanbazhanau/mastering-sqlalchemy-a-comprehensive-guide-for-python-developers-ddb3d9f2e829
+
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from app import db
+from app import db, login
+from datetime import datetime, timezone
+from flask_login import UserMixin
+from typing import Optional
+from werkzeug.security import generate_password_hash, check_password_hash
 
+@login.user_loader
+def load_user(id):
+    """Load user."""
+    return db.session.get(User, int(id))
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     """User model."""
+    # UserMixin provides - is_authenticated, is_active, is_anonymous, get_id()
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True,
                                                 unique=True)
@@ -18,7 +29,14 @@ class User(db.Model):
         sa.CheckConstraint('bithdate BETWEEN 1950 and 2099'))
     posts: so.WriteOnlyMapped['Post'] = so.relationship(
         back_populates='author')
+    def set_password(self, password):
+        """Set password."""
+        self.password_hash = generate_password_hash(password)
 
+    def check_password(self, password):
+        """Check password."""
+        return check_password_hash(self.password_hash, password)
+    
     def __repr__(self):
         return '<User {}>'.format(self.username)
 

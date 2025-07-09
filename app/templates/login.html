@@ -1,6 +1,6 @@
-<!-- {% extends "base.html" %} -->
+{% extends "base.html" %}
 
-<!-- {% block content %} -->
+{% block content %}
     <h1>Sign In</h1>
     <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
@@ -19,6 +19,7 @@
             {% endfor %}
         </p>
         <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-        <p>{{ form.submit() }}</p>
+        <p>{{ form.register() }}</p>
     </form>
-<!-- {% endblock %} -->
+    <p>Cannot login? <a href="{{ url_for('support') }}"> Report Issue</a></p>
+{% endblock %}

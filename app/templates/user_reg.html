@@ -15,31 +15,160 @@
     {% endwith %}
     
     <h1>Register A New User</h1>
+    {% if a_form_submitted %}
+        <p><a href="{{ url_for('reg_from_wa_text') }}">Register another using WhatsApp"></form></a></p>
+    {% endif %}
+
     <form method="POST">
         {{ form.hidden_tag() }}
-        <div>{{ form.batch.label }} {{ form.batch() }}</div>
-        <div>{{ form.email.label }} {{ form.email() }}</div>
-        <div>{{ form.name.label }} {{ form.name() }}</div>
-        <div>{{ form.gender.label }} {{ form.gender() }}</div>
-        <div>{{ form.yob.label }} {{ form.yob() }}</div>
-        <div>{{ form.mobile.label }} {{ form.mobile() }}</div>
-        <div>{{ form.whatsapp.label }} {{ form.hometowncity() }}</div>
-        <div>{{ form.hometowncity.label }} {{ form.hometowncity() }}</div>
-        <div>{{ form.hometowndistrict.label }} {{ form.hometowndistrict() }}</div>
-        <div>{{ form.hometownstate.label }} {{ form.hometownstate() }}</div>
-        <div>{{ form.hometowncountry.label }} {{ form.hometowncountry() }}</div>
-        <div>{{ form.residencecity.label }} {{ form.residencecity() }}</div>
-        <div>{{ form.residencestate.label }} {{ form.residencestate() }}</div>
-        <div>{{ form.residentcountry.label }} {{ form.residentcountry() }}</div>
-        <div>{{ form.residentzip.label }} {{ form.residentzip() }}</div>
-        <div>{{ form.education.label }} {{ form.education() }}</div>
-        <div>{{ form.profession.label }} {{ form.profession() }}</div>
-        <div>{{ form.referrer_id.label }} {{ form.referrer_id() }}</div>
-        <div>{{ form.status.label }} {{ form.status() }}</div>
-        <div>{{ form.bio.label }} {{ form.bio() }}</div>
-        <!-- <div>{{ form.bio.label }} {{ form.bio() }}</div> -->
-        <!-- <div>{{ form.status.label }} {{ form.status() }}</div> -->
-        <div>{{ form.submit() }} </div>
+            <p>
+                { form.batch.label }<br>
+                { form.batch(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.email.label }<br>
+                { form.email(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.name.label }<br>
+                { form.name(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.gender.label }<br>
+                { form.gender(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.yob.label }<br>
+                { form.yob(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.mobile.label }<br>
+                { form.mobile(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.whatsapp.label }<br>
+                { form.whatsapp(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.hometowncity.label }<br>
+                { form.hometowncity(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.hometowndistrict.label }<br>
+                { form.hometowndistrict(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.hometownstate.label }<br>
+                { form.hometownstate(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.hometowncountry.label }<br>
+                { form.hometowncountry(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.residencecity.label }<br>
+                { form.residencecity(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.residencestate.label }<br>
+                { form.residencestate(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.residentcountry.label }<br>
+                { form.residentcountry(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.residentzip.label }<br>
+                { form.residentzip(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.education.label }<br>
+                { form.education(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.profession.label }<br>
+                { form.profession(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.referrer_id.label }<br>
+                { form.referrer_id(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.status.label }<br>
+                { form.status(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.bio.label }<br>
+                { form.bio(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            <p>
+                { form.visa_type.label }<br>
+                { form.visa_type(size=32) }<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{ error }]</span>
+                {% endfor %}
+            </p>
+            </p>{{ form.register() }} </p>
     </form>        
     </body>
 {% endblock %}

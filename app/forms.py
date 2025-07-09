@@ -2,9 +2,11 @@
 import datetime
 from flask_wtf import FlaskForm
 from wtforms import SelectField, SubmitField, TelField, TextAreaField, EmailField, StringField, IntegerField, PasswordField, BooleanField
-from wtforms.validators import DataRequired, InputRequired, NumberRange, Length
+from wtforms.validators import DataRequired, InputRequired, NumberRange, Length, ValidationError, Email, EqualTo
 
-# from app import app
+import sqlalchemy as sa
+from app import db
+from app.models import User
 
 from .config import Config
 
@@ -14,18 +16,18 @@ class LoginForm(FlaskForm):
     email = StringField('email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
-    submit = SubmitField('Sign In')
+    register = SubmitField('Sign In')
     
 class BatchForm(FlaskForm):
     """ Batch Selection Form """
     # batch = SelectField('Select Batch', choices=Config.BATCHES, coerce=str)
     batch = SelectField('Select Batch', choices=Config.BATCHES)
-    submit = SubmitField('Submit')
+    register = SubmitField('Register')
 
 class RegFromWaText(FlaskForm):
     """ WhatsApp Registration Form """
     whatsapptext = TextAreaField('Paste WhatsApp Registration Text in the below box.', validators=[], render_kw={"rows": 34, "cols": 100})
-    submit = SubmitField('Submit')
+    register = SubmitField('Register')
 
 class UserRegForm(FlaskForm):
     """ User Registration Form """
@@ -49,5 +51,17 @@ class UserRegForm(FlaskForm):
     referrer_id     = IntegerField('Referred By ID', validators=[], default=0)
     status          = SelectField('Status', choices=Config.STATUS, default=Config.STATUS[0], validators=[])
     bio             = TextAreaField('Notes', validators=[], render_kw={"rows": 2, "cols": 80})    
-    submit          = SubmitField('Submit')  
+    register        = SubmitField('Register')
+
+    def validate_username(self, username):
+        user = db.session.scalar(sa.select(User).where(
+            User.username == username.data))
+        if user is not None:
+            raise ValidationError('Please use a different username.')
+
+    def validate_email(self, email):
+        user = db.session.scalar(sa.select(User).where(
+            User.email == email.data))
+        if user is not None:
+            raise ValidationError('Please use a different email address.')
 
