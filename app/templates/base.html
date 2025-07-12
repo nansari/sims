@@ -72,8 +72,56 @@
             text-decoration: none;
             transition: background-color 0.3s, color 0.3s;
         }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        .navbar-nav .nav-item .nav-link.active {
+            background-color: #8a3ffc;
+            border-radius: 5px;
+        }
+
         .sidebar-menu li a:hover {
             background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .sidebar-menu li a.active {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .dark-mode {
+            --primary-color: #1a1a1a;
+            --secondary-color: #2c2c2c;
+            --background-color: #121212;
+            --text-color: #e0e0e0;
+        }
+
+        .dark-mode .sidebar {
+            background-color: #1a1a1a;
+        }
+
+        .dark-mode .sidebar-menu li a {
+            color: #e0e0e0;
+        }
+
+        .dark-mode .sidebar-menu li a:hover {
+            background-color: #2c2c2c;
+        }
+
+        .dark-mode .sidebar-menu li a.active {
+            background-color: #2c2c2c;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .form-check-label {
             color: #fff;
         }
         .sidebar-menu li a .icon {
@@ -113,7 +161,8 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav" style="font-size: 1.5rem;">
-                {% if not current_user.is_anonymous %}
+                <!-- This MUST be change to hide all option from user not logged in -->
+                {% if current_user.is_anonymous %}
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="home">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="add">Add</a></li>
@@ -124,7 +173,8 @@
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="attendance">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="tasks">Tasks</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="test">Test</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" data-menu="review">Review</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-menu="remplates">Templates</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-menu="report">Reports</a></li>
                 </ul>
                 {% endif %}
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
@@ -134,6 +184,12 @@
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
                     {% endif %}
+                    <li class="nav-item d-flex align-items-center me-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                            <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
+                        </div>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('support') }}">Support</a></li>
                 </ul>
             </div>
@@ -176,14 +232,15 @@
             const toggleSidebarBtn = document.getElementById('toggle-sidebar');
             const sidebarMenu = document.getElementById('sidebar-menu');
             const navLinks = document.querySelectorAll('.nav-link[data-menu]');
+            const darkModeToggle = document.getElementById('darkModeToggle');
 
             const submenuItems = {
                 add: [
                     { icon: 'fa-user-plus', text: 'User Form', href: '#' },
-                    { icon: 'fa-user-plus', text: 'User Text', href:  "{{ url_for('reg_from_wa_text') }}" },
+                    { icon: 'fa-user-plus', text: 'User WA Text', href:  "{{ url_for('reg_from_wa_text') }}" },
                     { icon: 'fa-users', text: 'Batch', href: '#' },
                     { icon: 'fa-user-tag', text: 'Role', href: '#' },
-                    { icon: 'fa-school', text: 'Class', href: '#' }
+                    { icon: 'fa-school', text: 'Next Class', href: '#' }
                 ],
                 remove: [
                     { icon: 'fa-phone-slash', text: 'Phone', href: '#' },
@@ -245,9 +302,24 @@
             navLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
                     const menu = this.getAttribute('data-menu');
                     updateSidebar(menu);
                 });
+            });
+
+            sidebarMenu.addEventListener('click', function(e) {
+                const target = e.target.closest('a');
+                if (target) {
+                    const allLinks = sidebarMenu.querySelectorAll('a');
+                    allLinks.forEach(link => link.classList.remove('active'));
+                    target.classList.add('active');
+                }
+            });
+
+            darkModeToggle.addEventListener('change', function() {
+                document.body.classList.toggle('dark-mode');
             });
 
             toggleSidebarBtn.addEventListener('click', function () {
