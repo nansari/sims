@@ -38,11 +38,13 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     form = fo.LoginForm()
-    if form.validate_on_submit():#zzzz
+    if form.validate_on_submit():
         user = db.session.scalar(
-            sa.select(mo.User).where(mo.User.username == form.email.data))
+            sa.select(mo.User).where(mo.User.email == form.email.data))
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid email or password')
+            flash('Invalid email or password {} {}'.format(
+                form.email.data, user.email))
+            # flash('Invalid email or password')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
@@ -179,10 +181,32 @@ def user_reg():
     return render_template('user_reg.html', a_form_submitted=a_form_submitted, form=form)
 
 
-@app.route('/show_a_user/<user_id>', methods=['GET', 'POST'])
+@app.route('/password', methods=['GET', 'POST'])
 @login_required
-def show_a_user(user_id):
-    """Renders the show_a_user page"""
-    # return f"<html><body><p>Display user details of {user_id}</p></body></html>"
-    return render_template('show_a_user.html', user_id=user_id)
+def password():
+    """Renders the password page."""
+    form = forms.PasswordForm()
+    if form.validate_on_submit():
+        user = None
+        if form.user_id.data:
+            user = db.session.get(mo.User, form.user_id.data)
+        elif form.name.data:
+            user = db.session.scalar(sa.select(mo.User).where(mo.User.username.like(f'%{form.name.data}%')))
+        elif form.email.data:
+            user = db.session.scalar(sa.select(mo.User).where(mo.User.email.like(f'%{form.email.data}%')))
+
+        if user:
+            password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
+            if password:
+                password.password_hash = generate_password_hash(form.password.data)
+                flash(f'Password for <a href="{url_for('show_a_user', user_id=user.id)}">{user.id}</a> updated.')
+            else:
+                password = mo.Password(user_id=user.id, password_hash=generate_password_hash(form.password.data))
+                db.session.add(password)
+                flash(f'Password for <a href="{url_for('show_a_user', user_id=user.id)}">{user.id}</a> added.')
+            db.session.commit()
+            return redirect(url_for('password'))
+        else:
+            flash('User not found.')
+    return render_template('password.html', title='Password', form=form)
 

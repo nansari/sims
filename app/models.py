@@ -23,19 +23,27 @@ class User(UserMixin, db.Model):
                                              unique=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True,)
                                             
-    password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
+    password: so.Mapped['Password'] = so.relationship(back_populates='user', cascade='all, delete-orphan')
     bithdate: so.Mapped[int] = so.mapped_column(
         sa.Integer(),
         sa.CheckConstraint('bithdate BETWEEN 1950 and 2099'))
-    posts: so.WriteOnlyMapped['Post'] = so.relationship(
-        back_populates='author')
-    def set_password(self, password):
+    
+    
+    @property
+    def password_hash(self):
+        """Prevent password from being accessed"""
+        raise AttributeError('password is not a readable attribute')
+
+    @password_hash.setter
+    def password_hash(self, password):
         """Set password."""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         """Check password."""
-        return check_password_hash(self.password_hash, password)
+        if self.password:
+            return check_password_hash(self.password.password_hash, password)
+        return False
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -44,7 +52,8 @@ class Password(db.Model):
     """Password model."""
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     password_hash: so.Mapped[str] = so.mapped_column(sa.String(256))
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id))
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), unique=True)
+    user: so.Mapped['User'] = so.relationship(back_populates='password')
     
 # class Post(db.Model):
 #     """Post model."""

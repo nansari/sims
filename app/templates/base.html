@@ -162,7 +162,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav" style="font-size: 1.5rem;">
                 <!-- This MUST be change to hide all option from user not logged in -->
-                {% if current_user.is_anonymous %}
+                {% if not current_user.is_anonymous %}
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="home">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="add">Add</a></li>

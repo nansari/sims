@@ -18,11 +18,21 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Remember Me')
     register = SubmitField('Sign In')
     
+class PasswordForm(FlaskForm):
+    """ Password Form """
+    user_id = IntegerField('User ID', validators=[])
+    name = StringField('Name', validators=[])
+    email = StringField('Email', validators=[])
+    password = PasswordField('Password', validators=[DataRequired(), EqualTo('confirm_password', message='Passwords must match')])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
 class BatchForm(FlaskForm):
     """ Batch Selection Form """
     # batch = SelectField('Select Batch', choices=Config.BATCHES, coerce=str)
     batch = SelectField('Select Batch', choices=Config.BATCHES)
     register = SubmitField('Register')
+
 
 class RegFromWaText(FlaskForm):
     """ WhatsApp Registration Form """
