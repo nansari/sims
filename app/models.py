@@ -19,10 +19,10 @@ class User(UserMixin, db.Model):
     """User model."""
     # UserMixin provides - is_authenticated, is_active, is_anonymous, get_id()
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True,
-                                                unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True,
                                              unique=True)
+    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True,)
+                                            
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
     bithdate: so.Mapped[int] = so.mapped_column(
         sa.Integer(),
@@ -36,26 +36,37 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         """Check password."""
         return check_password_hash(self.password_hash, password)
-    
+
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
-
-class Post(db.Model):
-    """Post model."""
+class Password(db.Model):
+    """Password model."""
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    body: so.Mapped[str] = so.mapped_column(sa.String(140))
-    timestamp: so.Mapped[datetime] = so.mapped_column(
-        index=True, default=lambda: datetime.now(timezone.utc))
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id),
-                                               index=True)
-
-    author: so.Mapped[User] = so.relationship(back_populates='posts')
-
-    def __repr__(self):
-        return '<Post {}>'.format(self.body)
+    password_hash: so.Mapped[str] = so.mapped_column(sa.String(256))
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id))
     
+# class Post(db.Model):
+#     """Post model."""
+#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+#     body: so.Mapped[str] = so.mapped_column(sa.String(140))
+#     timestamp: so.Mapped[datetime] = so.mapped_column(
+#         index=True, default=lambda: datetime.now(timezone.utc))
+#     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id),
+#                                                index=True)
+
+#     author: so.Mapped[User] = so.relationship(back_populates='posts')
+
+#     def __repr__(self):
+#         return '<Post {}>'.format(self.body)
+
 class Role(db.Model):
     """Role model."""
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True)
+
+class UserRole(db.Model):
+    """User role model."""
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id))
+    role_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Role.id))

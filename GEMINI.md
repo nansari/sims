@@ -11,17 +11,18 @@ This project is a Flask-based web application for managing student registrations
 *   **Backend:** Python, Flask
 *   **Frontend:** HTML with Jinja2 templating
 *   **Forms:** Flask-WTF
-*   **Database:** The project is configured to use SQLAlchemy, but it is currently commented out in `app.py`. The `sqlite_demo` directory suggests that SQLite is the intended database.
+*   **Database:** The project is configured to use SQLAlchemy with SQLite.
 *   **Dependencies:** See `requirement.txt` for a full list of Python dependencies.
 
 ## Project Structure
-
 The project is organized as follows:
 
 ```
 ├── app.py                  # Main Flask application file
 ├── config.py               # Configuration settings
 ├── forms.py                # WTForms definitions
+├── routers.py              # Route definitions
+├── models.py               # Database models
 ├── requirement.txt         # Python dependencies
 ├── templates/              # Jinja2 templates
 │   ├── base.html           # Base template
@@ -37,7 +38,9 @@ The project is organized as follows:
 
 ## How to Run the Application
 
-To run the application, you can use the following command:
+Never run application after making changes to code as I am running the flask in debug mode that restart itself on any code change.
+
+<!-- To run the application, you can use the following command:
 
 ```bash
 flask run
@@ -47,11 +50,17 @@ Alternatively, you can run the `app.py` file directly:
 
 ```bash
 python app.py
-```
-
+``` -->
+<!-- 
 ## Available Commands
 
 *   **Run tests:**
     ```bash
     python -m unittest discover tests
-    ```
+    ``` -->
+# DOCUMENTATION
+- Create doc scring of each function, class and module to describe it
+
+# IMPORTANT
+
+
