@@ -42,8 +42,7 @@ def login():
         user = db.session.scalar(
             sa.select(mo.User).where(mo.User.email == form.email.data))
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid email or password {} {}'.format(
-                form.email.data, user.email))
+            flash(f'Invalid email or password {form.email.data} {user.email}')
             # flash('Invalid email or password')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)

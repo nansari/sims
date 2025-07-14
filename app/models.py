@@ -11,9 +11,9 @@ from typing import Optional
 from werkzeug.security import generate_password_hash, check_password_hash
 
 @login.user_loader
-def load_user(id):
+def load_user(user_id):
     """Load user."""
-    return db.session.get(User, int(id))
+    return db.session.get(User, int(user_id))
 
 class User(UserMixin, db.Model):
     """User model."""
