@@ -75,3 +75,17 @@ class UserRegForm(FlaskForm):
         if user is not None:
             raise ValidationError('Please use a different email address.')
 
+class LocationForm(FlaskForm):
+    """A form for selecting a location by country, state, and city.
+
+    Attributes:
+        country (StringField): A text field for entering the country name.
+        state (SelectField): A dropdown for selecting the state.
+        city (SelectField): A dropdown for selecting the city.
+        submit (SubmitField): A button to submit the form.
+    """
+    country = StringField('Country', validators=[DataRequired()])
+    state = SelectField('State', choices=[], validators=[DataRequired()])
+    city = SelectField('City', choices=[], validators=[DataRequired()])
+    submit = SubmitField('Search')
+

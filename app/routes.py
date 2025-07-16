@@ -1,6 +1,6 @@
 #
 from urllib.parse import urlsplit
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 import sqlalchemy as sa
 from app import app, db
@@ -208,4 +208,72 @@ def password():
         else:
             flash('User not found.')
     return render_template('password.html', title='Password', form=form)
+
+@app.route('/location', methods=['GET', 'POST'])
+@login_required
+def location():
+    """Renders the location page, which allows users to search for locations.
+
+    Returns:
+        A rendered template of the location page.
+    """
+    form = fo.LocationForm()
+    return render_template('location.html', title='Location', form=form)
+
+@app.route('/api/states/<country_name>')
+@login_required
+def api_states(country_name):
+    """Provides a list of states for a given country.
+
+    Args:
+        country_name (str): The name of the country to get states for.
+
+    Returns:
+        A JSON response containing a list of states.
+    """
+    country = db.session.scalar(sa.select(mo.Countries).where(mo.Countries.name.ilike(f'%{country_name}%')))
+    if country:
+        states = db.session.scalars(sa.select(mo.States).where(mo.States.country_id == country.id)).all()
+        return jsonify([{'id': state.id, 'name': state.name} for state in states])
+    return jsonify([])
+
+@app.route('/api/cities/<country_name>/<int:state_id>')
+@login_required
+def api_cities(country_name, state_id):
+    """Provides a list of cities for a given country and state.
+
+    Args:
+        country_name (str): The name of the country.
+        state_id (int): The ID of the state.
+
+    Returns:
+        A JSON response containing a list of cities.
+    """
+    country = db.session.scalar(sa.select(mo.Countries).where(mo.Countries.name.ilike(f'%{country_name}%')))
+    if country:
+        cities = db.session.scalars(sa.select(mo.Cities).where(mo.Cities.country_id == country.id, mo.Cities.state_id == state_id)).all()
+        return jsonify([{'id': city.id, 'name': city.name} for city in cities])
+    return jsonify([])
+
+@app.route('/api/location/<int:city_id>')
+@login_required
+def api_location(city_id):
+    """Provides location data for a given city.
+
+    Args:
+        city_id (int): The ID of the city.
+
+    Returns:
+        A JSON response containing the location data.
+    """
+    city = db.session.get(mo.Cities, city_id)
+    if city:
+        return jsonify([{
+            'Country': city.country.name,
+            'State': city.state.name,
+            'City': city.name,
+            'Latitude': city.latitude,
+            'Longitude': city.longitude
+        }])
+    return jsonify([])
 

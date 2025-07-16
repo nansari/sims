@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Location Search</h2>
+    <form id="location-form">
+        <div class="form-group">
+            <label for="country">Country</label>
+            <input type="text" class="form-control" id="country" name="country" placeholder="Enter country">
+        </div>
+        <div class="form-group">
+            <label for="state">State</label>
+            <select class="form-control" id="state" name="state" disabled>
+                <option>Select state</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="city">City</label>
+            <select class="form-control" id="city" name="city" disabled>
+                <option>Select city</option>
+            </select>
+        </div>
+    </form>
+    <hr>
+    <div id="location-results"></div>
+</div>
+{% endblock %}
+
+{% block custom_scripts %}
+<script>
+    $(document).ready(function() {
+        var countrySearchTimeout;
+        $('#country').on('keyup', function() {
+            clearTimeout(countrySearchTimeout);
+            var countryName = $(this).val(); // Capture countryName here
+            countrySearchTimeout = setTimeout(function() {
+                // Use the captured countryName directly
+                if (countryName) {
+                    $.ajax({
+                        url: '/api/states/' + countryName,
+                        type: 'GET',
+                        success: function(data) {
+                            $('#state').empty().append('<option>Select state</option>').prop('disabled', false);
+                            $.each(data, function(index, state) {
+                                $('#state').append('<option value="' + state.id + '">' + state.name + '</option>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#state').empty().append('<option>Select state</option>').prop('disabled', true);
+                    $('#city').empty().append('<option>Select city</option>').prop('disabled', true);
+                }
+            }, 500); // 500ms delay
+        });
+
+        $('#state').on('change', function() {
+            var stateId = $(this).val();
+            var countryName = $('#country').val();
+            if (stateId) {
+                $.ajax({
+                    url: '/api/cities/' + countryName + '/' + stateId,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#city').empty().append('<option>Select city</option>').prop('disabled', false);
+                        $.each(data, function(index, city) {
+                            $('#city').append('<option value="' + city.id + '">' + city.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#city').empty().append('<option>Select city</option>').prop('disabled', true);
+            }
+        });
+
+        $('#city').on('change', function() {
+            var cityId = $(this).val();
+            if (cityId) {
+                $.ajax({
+                    url: '/api/location/' + cityId,
+                    type: 'GET',
+                    success: function(data) {
+                        var table = '<table class="table table-bordered"><thead><tr>';
+                        for (var key in data[0]) {
+                            table += '<th>' + key + '</th>';
+                        }
+                        table += '</tr></thead><tbody>';
+                        $.each(data, function(index, location) {
+                            table += '<tr>';
+                            for (var key in location) {
+                                table += '<td>' + location[key] + '</td>';
+                            }
+                            table += '</tr>';
+                        });
+                        table += '</tbody></table>';
+                        $('#location-results').html(table);
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
