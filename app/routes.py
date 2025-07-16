@@ -1,4 +1,5 @@
 #
+import json
 from urllib.parse import urlsplit
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
@@ -268,12 +269,24 @@ def api_location(city_id):
     """
     city = db.session.get(mo.Cities, city_id)
     if city:
+        # tz = [d['gmtOffsetName'] for d in json.loads(city.country.timezones)]
         return jsonify([{
             'Country': city.country.name,
-            'State': city.state.name,
+            'ISO3': city.country.iso3,
+            'ISO2': city.country.iso2,
+            # 'Numeric Code': city.country.numeric_code,
+            'Phone Code': city.country.phonecode,
+            'Currency': city.country.currency,
+            'Currency Name': city.country.currency_name,
+            'Capital': city.country.capital,
+            # 'Timezones': ','.join([d['gmtOffsetName']+'|'+d['abbreviation'] for d in json.loads(city.country.timezones)]),
+            'Timezones': city.country.timezones,
+            # 'Nationality': city.country.nationality,
+            # 'Flag': city.country.flag,
+            'CityState': city.state.name,
             'City': city.name,
-            'Latitude': city.latitude,
-            'Longitude': city.longitude
+            # 'Latitude': city.latitude,
+            # 'Longitude': city.longitude
         }])
     return jsonify([])
 
