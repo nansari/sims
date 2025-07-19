@@ -31,7 +31,7 @@ class BatchForm(FlaskForm):
     """ Batch Selection Form """
     # batch = SelectField('Select Batch', choices=Config.BATCHES, coerce=str)
     batch = SelectField('Select Batch', choices=Config.BATCHES)
-    register = SubmitField('Register')
+    submit = SubmitField('Generate')
 
 
 class RegFromWaText(FlaskForm):
@@ -43,7 +43,8 @@ class UserRegForm(FlaskForm):
     """ User Registration Form """
     batch           = SelectField('Select Batch', choices=Config.BATCHES, default=Config.BATCHES[-1])
     email           = EmailField('Email', validators=[DataRequired()])
-    name            = TelField('Name', validators=[DataRequired()])
+    username        = TelField('Name', validators=[DataRequired()])
+    visa_type       = TelField('Visa Type', validators=[])
     gender          = SelectField('Gender', choices=['M', 'F'], validators=[])
     yob             = IntegerField('Year of Birth', validators=[InputRequired(), NumberRange(min=thisyear - 80, max=thisyear - 10, message="Birthday is not in range or invalid.")])
     mobile          = IntegerField('Mobile with country code', validators=[DataRequired()])
@@ -62,6 +63,7 @@ class UserRegForm(FlaskForm):
     status          = SelectField('Status', choices=Config.STATUS, default=Config.STATUS[0], validators=[])
     bio             = TextAreaField('Notes', validators=[], render_kw={"rows": 2, "cols": 80})    
     register        = SubmitField('Register')
+
 
     def validate_username(self, username):
         user = db.session.scalar(sa.select(User).where(

@@ -174,7 +174,7 @@
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="attendance">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="tasks">Tasks</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="test">Test</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" data-menu="remplates">Templates</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-menu="templates">Templates</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-menu="report">Reports</a></li>
                 </ul>
                 {% endif %}
@@ -236,7 +236,7 @@
 
             const submenuItems = {
                 add: [
-                    { icon: 'fa-user-plus', text: 'User Form', href: '#' },
+                    { icon: 'fa-user-plus', text: 'User Form', href:  "{{ url_for('user_reg') }}" },
                     { icon: 'fa-user-plus', text: 'User WA Text', href:  "{{ url_for('reg_from_wa_text') }}" },
                     { icon: 'fa-users', text: 'Batch', href: '#' },
                     { icon: 'fa-user-tag', text: 'Role', href: '#' },
@@ -278,7 +278,11 @@
                     { icon: 'fa-calendar-alt', text: 'Call Time', href: '#' },
                     { icon: 'fa-chalkboard-teacher', text: 'Mentor', href: '#' },
                     { icon: 'fa-edit', text: 'Class', href: '#' }
-                ]
+                ],
+                templates: [
+                    { icon: 'fa-file', text: 'Registration', href: "{{ url_for('reg_template') }}" },
+                    { icon: 'fa-envelope', text: 'Welcome Email', href: '#' },
+                ],
             };
 
             function updateSidebar(menu) {

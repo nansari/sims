@@ -1,3 +1,4 @@
+#
 import re
 
 # text = """
@@ -67,10 +68,9 @@ def clean_phone(number):
     return re.sub(r'\D', '', number)
 
 # Parse the text and update USERDICT
-def parse_wa_text(text):
-    # Extract student details
+def parse_wa_text_fn(text):
+    """Extract student details"""
     user_details = re.search(r'\STUDENT DETAILS FOR[\s\S]+?REFERRED By :', text)
-    print('xxxxxxxxxxxxxxxxxxxxx', user_details)
 
     if user_details:
         user_details1 = re.search(r'STUDENT DETAILS FOR[\s\S]+?CURRENT RESIDENCE', text)
@@ -84,7 +84,7 @@ def parse_wa_text(text):
         # Extract name
         name_match = re.search(r'Full Name\s*:\s*(.*)', details)
         if name_match:
-            USERDICT['name'] = capitalize_name(name_match.group(1).strip())
+            USERDICT['username'] = capitalize_name(name_match.group(1).strip())
 
         # Extract mobile
         mobile_match = re.search(r'Mobile#\s*:\s*(.*)', details)

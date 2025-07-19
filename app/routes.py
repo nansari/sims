@@ -10,8 +10,8 @@ from app import app, db
 import app.forms as fo
 import app.models as mo
 from . import forms
-from functions import parse_wa_text
 # from flask_debugtoolbar import DebugToolbarExtension
+from functions.parse_wa_text import parse_wa_text_fn
 
 # @app.route('/home')
 @app.route('/')
@@ -107,7 +107,7 @@ def reg_from_wa_text():
     if form.validate_on_submit():
         whatsapptext = request.form.get('whatsapptext')
         if whatsapptext:
-            d=parse_wa_text(whatsapptext)
+            d=parse_wa_text_fn(whatsapptext)
             form = forms.UserRegForm(data=d)
             return render_template('user_reg.html', form=form)
         else:
@@ -138,7 +138,6 @@ def reg_from_wa_text():
         pass
     return render_template('reg_from_wa_text.html', form=form)
 
-import requests
 
 @app.route('/support', methods=['GET', 'POST'])
 def support():
