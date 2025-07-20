@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Student Group</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.student_id.label }}<br>
+            {{ form.student_id() }}
+            {% for error in form.student_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_group_id.label }}<br>
+            {{ form.class_group_id() }}
+            {% for error in form.class_group_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.index_no.label }}<br>
+            {{ form.index_no() }}
+            {% for error in form.index_no.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.status_id.label }}<br>
+            {{ form.status_id() }}
+            {% for error in form.status_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <hr>
+    <h2>Existing Student Groups</h2>
+    <ul>
+        {% for group in groups %}
+        <li>{{ group.student.username }} - {{ group.class_group.description }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

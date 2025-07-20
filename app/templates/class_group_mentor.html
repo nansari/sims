@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Class Group Mentor</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.user_id.label }}<br>
+            {{ form.user_id() }}
+            {% for error in form.user_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_name_id.label }}<br>
+            {{ form.class_name_id() }}
+            {% for error in form.class_name_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_batch_id.label }}<br>
+            {{ form.class_batch_id() }}
+            {% for error in form.class_batch_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_region_id.label }}<br>
+            {{ form.class_region_id() }}
+            {% for error in form.class_region_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_group_id.label }}<br>
+            {{ form.class_group_id() }}
+            {% for error in form.class_group_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <hr>
+    <h2>Existing Class Group Mentors</h2>
+    <ul>
+        {% for mentor in mentors %}
+        <li>{{ mentor.user.username }} - {{ mentor.class_group.description }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Class Group Index</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.class_region_id.label }}<br>
+            {{ form.class_region_id() }}
+            {% for error in form.class_region_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.description.label }}<br>
+            {{ form.description(size=255) }}
+            {% for error in form.description.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.start_index.label }}<br>
+            {{ form.start_index() }}
+            {% for error in form.start_index.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.end_index.label }}<br>
+            {{ form.end_index() }}
+            {% for error in form.end_index.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <hr>
+    <form action="" method="get">
+        <input type="text" name="search" placeholder="Search by description" value="{{ request.args.get('search', '') }}">
+        <input type="submit" value="Search">
+    </form>
+    <hr>
+    <h2>Existing Class Group Indexes</h2>
+    <ul>
+        {% for index in indexes %}
+        <li>{{ index.class_region.section }} - {{ index.description }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

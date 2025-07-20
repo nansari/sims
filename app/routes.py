@@ -1,10 +1,14 @@
 #
 import json
 from urllib.parse import urlsplit
-from flask import render_template, flash, redirect, url_for, request, jsonify
+from flask import render_template, flash, redirect, url_for, request, send_file
+from flask import jsonify
+from io import BytesIO
 from flask_login import login_user, logout_user, current_user, login_required
 import sqlalchemy as sa
 from app import app, db
+from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupIndexForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm
+from app.models import ClassName, ClassBatch, ClassRegion, ClassGroupIndex, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus
 # from app.forms import LoginForm, RegistrationForm
 # from app.models import User
 import app.forms as fo
@@ -198,11 +202,11 @@ def password():
             password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
             if password:
                 password.password_hash = generate_password_hash(form.password.data)
-                flash(f'Password for <a href="{url_for('show_a_user', user_id=user.id)}">{user.id}</a> updated.')
+                flash(f'Password for <a href="{url_for('user_profile', username=user.username)}">{user.id}</a> updated.')
             else:
                 password = mo.Password(user_id=user.id, password_hash=generate_password_hash(form.password.data))
                 db.session.add(password)
-                flash(f'Password for <a href="{url_for('show_a_user', user_id=user.id)}">{user.id}</a> added.')
+                flash(f'Password for <a href="{url_for('user_profile', username=user.username)}">{user.id}</a> added.')
             db.session.commit()
             return redirect(url_for('password'))
         else:
@@ -288,4 +292,292 @@ def api_location(city_id):
             # 'Longitude': city.longitude
         }])
     return jsonify([])
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Renders the dashboard page."""
+    num_students = db.session.query(mo.User).count()
+    num_teachers = db.session.query(mo.ClassBatchTeacher).distinct(mo.ClassBatchTeacher.user_id).count()
+    num_classes = db.session.query(mo.ClassName).count()
+    num_batches = db.session.query(mo.ClassBatch).count()
+
+    # Data for charts
+    student_status_data = db.session.query(mo.UserStatus.status, sa.func.count(mo.StudentGroup.id)).join(mo.StudentGroup).group_by(mo.UserStatus.status).all()
+    student_batch_data = db.session.query(mo.ClassBatch.batch_no, sa.func.count(mo.StudentGroup.id)).join(mo.ClassGroupIndex).join(mo.StudentGroup).join(mo.ClassRegion).join(mo.ClassBatch).group_by(mo.ClassBatch.batch_no).all()
+
+    chart_data = {
+        'student_status': {
+            'labels': [status[0] for status in student_status_data],
+            'data': [status[1] for status in student_status_data]
+        },
+        'student_batch': {
+            'labels': [batch[0] for batch in student_batch_data],
+            'data': [batch[1] for batch in student_batch_data]
+        }
+    }
+
+    return render_template('dashboard.html', title='Dashboard',
+                           num_students=num_students,
+                           num_teachers=num_teachers,
+                           num_classes=num_classes,
+                           num_batches=num_batches,
+                           chart_data=chart_data)
+
+@app.route('/calendar')
+@login_required
+def calendar():
+    """Renders the calendar page."""
+    events = []
+    class_batches = db.session.query(mo.ClassBatch).all()
+    for batch in class_batches:
+        events.append({
+            'title': f'{batch.class_name.name} - {batch.batch_no}',
+            'start': batch.start_date.strftime('%Y-%m-%d'),
+        })
+    return render_template('calendar.html', title='Calendar', events=events)
+
+@app.route('/messages')
+@login_required
+def messages():
+    """Renders the messages page."""
+    messages = db.session.query(mo.Message).filter(
+        (mo.Message.sender_id == current_user.id) | (mo.Message.recipient_id == current_user.id)
+    ).order_by(mo.Message.timestamp.desc()).all()
+    return render_template('messages.html', title='Messages', messages=messages)
+
+@app.route('/send_message', methods=['GET', 'POST'])
+@login_required
+def send_message():
+    """Renders the send_message page."""
+    form = fo.MessageForm()
+    if form.validate_on_submit():
+        recipient = db.session.scalar(sa.select(mo.User).where(mo.User.username == form.recipient.data))
+        if recipient:
+            message = mo.Message(sender_id=current_user.id, recipient_id=recipient.id, body=form.body.data)
+            db.session.add(message)
+            db.session.commit()
+            flash('Your message has been sent.')
+            return redirect(url_for('messages'))
+        else:
+            flash('User not found.')
+    return render_template('send_message.html', title='Send Message', form=form)
+
+@app.route('/files')
+@login_required
+def files():
+    """Renders the files page."""
+    files = db.session.query(mo.File).filter(mo.File.user_id == current_user.id).all()
+    return render_template('files.html', title='Files', files=files)
+
+@app.route('/upload_file', methods=['GET', 'POST'])
+@login_required
+def upload_file():
+    """Renders the upload_file page."""
+    form = fo.FileUploadForm()
+    if form.validate_on_submit():
+        file = form.file.data
+        new_file = mo.File(filename=file.filename, data=file.read(), user_id=current_user.id, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(new_file)
+        db.session.commit()
+        flash('Your file has been uploaded.')
+        return redirect(url_for('files'))
+    return render_template('upload_file.html', title='Upload File', form=form)
+
+@app.route('/download_file/<int:file_id>')
+@login_required
+def download_file(file_id):
+    """Downloads a file."""
+    file = db.session.get(mo.File, file_id)
+    if file and file.user_id == current_user.id:
+        return send_file(BytesIO(file.data), download_name=file.filename, as_attachment=True)
+    else:
+        flash('File not found or you do not have permission to access it.')
+        return redirect(url_for('files'))
+
+
+@app.route('/class_name', methods=['GET', 'POST'])
+@login_required
+def class_name():
+    form = ClassNameForm()
+    if form.validate_on_submit():
+        class_name = ClassName(name=form.name.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(class_name)
+        db.session.commit()
+        flash('Class name added successfully!')
+        return redirect(url_for('class_name'))
+    query = ClassName.query
+    search = request.args.get('search')
+    date_filter = request.args.get('date_filter')
+    if search:
+        query = query.filter(ClassName.name.like(f'%{search}%'))
+    if date_filter:
+        query = query.filter(sa.func.date(ClassName.created_at) == date_filter)
+    classes = query.all()
+    return render_template('class_name.html', title='Class Name', form=form, classes=classes)
+
+@app.route('/class_batch', methods=['GET', 'POST'])
+@login_required
+def class_batch():
+    form = ClassBatchForm()
+    if form.validate_on_submit():
+        class_batch = ClassBatch(class_name_id=form.class_name_id.data, batch_no=form.batch_no.data, start_date=form.start_date.data, status_id=form.status_id.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(class_batch)
+        db.session.commit()
+        flash('Class batch added successfully!')
+        return redirect(url_for('class_batch'))
+    query = ClassBatch.query
+    search = request.args.get('search')
+    if search:
+        query = query.filter(ClassBatch.batch_no.like(f'%{search}%'))
+    batches = query.all()
+    return render_template('class_batch.html', title='Class Batch', form=form, batches=batches)
+
+@app.route('/class_region', methods=['GET', 'POST'])
+@login_required
+def class_region():
+    form = ClassRegionForm()
+    if form.validate_on_submit():
+        class_region = ClassRegion(class_name_id=form.class_name_id.data, class_batch_id=form.class_batch_id.data, section=form.section.data, description=form.description.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(class_region)
+        db.session.commit()
+        flash('Class region added successfully!')
+        return redirect(url_for('class_region'))
+    query = ClassRegion.query
+    search = request.args.get('search')
+    if search:
+        query = query.filter(ClassRegion.section.like(f'%{search}%'))
+    regions = query.all()
+    return render_template('class_region.html', title='Class Region', form=form, regions=regions)
+
+@app.route('/class_group_index', methods=['GET', 'POST'])
+@login_required
+def class_group_index():
+    form = ClassGroupIndexForm()
+    if form.validate_on_submit():
+        class_group_index = ClassGroupIndex(class_region_id=form.class_region_id.data, description=form.description.data, start_index=form.start_index.data, end_index=form.end_index.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(class_group_index)
+        db.session.commit()
+        flash('Class group index added successfully!')
+        return redirect(url_for('class_group_index'))
+    query = ClassGroupIndex.query
+    search = request.args.get('search')
+    if search:
+        query = query.filter(ClassGroupIndex.description.like(f'%{search}%'))
+    indexes = query.all()
+    return render_template('class_group_index.html', title='Class Group Index', form=form, indexes=indexes)
+
+@app.route('/class_group_mentor', methods=['GET', 'POST'])
+@login_required
+def class_group_mentor():
+    form = ClassGroupMentorForm()
+    if form.validate_on_submit():
+        class_group_mentor = ClassGroupMentor(user_id=form.user_id.data, class_name_id=form.class_name_id.data, class_batch_id=form.class_batch_id.data, class_region_id=form.class_region_id.data, class_group_id=form.class_group_id.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(class_group_mentor)
+        db.session.commit()
+        flash('Class group mentor added successfully!')
+        return redirect(url_for('class_group_mentor'))
+    mentors = ClassGroupMentor.query.all()
+    return render_template('class_group_mentor.html', title='Class Group Mentor', form=form, mentors=mentors)
+
+@app.route('/user_status', methods=['GET', 'POST'])
+@login_required
+def user_status():
+    form = UserStatusForm()
+    if form.validate_on_submit():
+        user_status = UserStatus(status=form.status.data, description=form.description.data)
+        db.session.add(user_status)
+        db.session.commit()
+        flash('User status added successfully!')
+        return redirect(url_for('user_status'))
+    statuses = UserStatus.query.all()
+    return render_template('user_status.html', title='User Status', form=form, statuses=statuses)
+
+@app.route('/student_group', methods=['GET', 'POST'])
+@login_required
+def student_group():
+    form = StudentGroupForm()
+    if form.validate_on_submit():
+        student_group = StudentGroup(student_id=form.student_id.data, class_group_id=form.class_group_id.data, index_no=form.index_no.data, status_id=form.status_id.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(student_group)
+        db.session.commit()
+        flash('Student group added successfully!')
+        return redirect(url_for('student_group'))
+    groups = StudentGroup.query.all()
+    return render_template('student_group.html', title='Student Group', form=form, groups=groups)
+
+@app.route('/class_batch_teacher', methods=['GET', 'POST'])
+@login_required
+def class_batch_teacher():
+    form = ClassBatchTeacherForm()
+    if form.validate_on_submit():
+        class_batch_teacher = ClassBatchTeacher(user_id=form.user_id.data, class_batch_id=form.class_batch_id.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(class_batch_teacher)
+        db.session.commit()
+        flash('Class batch teacher added successfully!')
+        return redirect(url_for('class_batch_teacher'))
+    teachers = ClassBatchTeacher.query.all()
+    return render_template('class_batch_teacher.html', title='Class Batch Teacher', form=form, teachers=teachers)
+
+@app.route('/role', methods=['GET', 'POST'])
+@login_required
+def role():
+    form = RoleForm()
+    if form.validate_on_submit():
+        role = Role(role=form.role.data, level=form.level.data, description=form.description.data)
+        db.session.add(role)
+        db.session.commit()
+        flash('Role added successfully!')
+        return redirect(url_for('role'))
+    roles = Role.query.all()
+    return render_template('role.html', title='Role', form=form, roles=roles)
+
+@app.route('/list_roles')
+@login_required
+def list_roles():
+    """Renders the list_roles page."""
+    roles = Role.query.all()
+    return render_template('list_roles.html', title='List Roles', roles=roles)
+
+
+@app.route('/user_role', methods=['GET', 'POST'])
+@login_required
+def user_role():
+    form = UserRoleForm()
+    if form.validate_on_submit():
+        user_role = UserRole(user_id=form.user_id.data, role_id=form.role_id.data, class_region_id=form.class_region_id.data, class_batch_id=form.class_batch_id.data, class_group_id=form.class_group_id.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(user_role)
+        db.session.commit()
+        flash('User role added successfully!')
+        return redirect(url_for('user_role'))
+    user_roles = UserRole.query.all()
+    return render_template('user_role.html', title='User Role', form=form, user_roles=user_roles)
+
+@app.route('/user/<username>')
+@login_required
+def user_profile(username):
+    """Renders the user profile page."""
+    user = db.session.scalar(sa.select(mo.User).where(mo.User.username == username))
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('index'))
+    
+    student_groups = db.session.query(mo.StudentGroup).filter_by(student_id=user.id).all()
+    
+    return render_template('user_profile.html', title='User Profile', user=user, student_groups=student_groups)
+
+
+@app.route('/class_batch_status', methods=['GET', 'POST'])
+@login_required
+def class_batch_status():
+    form = ClassBatchStatusForm()
+    if form.validate_on_submit():
+        class_batch_status = ClassBatchStatus(status=form.status.data)
+        db.session.add(class_batch_status)
+        db.session.commit()
+        flash('Class batch status added successfully!')
+        return redirect(url_for('class_batch_status'))
+    statuses = ClassBatchStatus.query.all()
+    return render_template('class_batch_status.html', title='Class Batch Status', form=form, statuses=statuses)
+
 

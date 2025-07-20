@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Class Name</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.name.label }}<br>
+            {{ form.name(size=32) }}
+            {% for error in form.name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <hr>
+    <form action="" method="get">
+        <input type="text" name="search" placeholder="Search by name" value="{{ request.args.get('search', '') }}">
+        <input type="date" name="date_filter" value="{{ request.args.get('date_filter', '') }}">
+        <input type="submit" value="Filter">
+    </form>
+    <hr>
+    <h2>Existing Class Names</h2>
+    <ul>
+        {% for class in classes %}
+        <li>{{ class.name }} ({{ class.created_at.strftime('%Y-%m-%d') }})</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

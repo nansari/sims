@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>User Role</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.user_id.label }}<br>
+            {{ form.user_id() }}
+            {% for error in form.user_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.role_id.label }}<br>
+            {{ form.role_id() }}
+            {% for error in form.role_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_region_id.label }}<br>
+            {{ form.class_region_id() }}
+            {% for error in form.class_region_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_batch_id.label }}<br>
+            {{ form.class_batch_id() }}
+            {% for error in form.class_batch_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_group_id.label }}<br>
+            {{ form.class_group_id() }}
+            {% for error in form.class_group_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <hr>
+    <h2>Existing User Roles</h2>
+    <ul>
+        {% for user_role in user_roles %}
+        <li>{{ user_role.user.username }} - {{ user_role.role.role }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -11,6 +11,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    GENDERS = ['M', 'F']
     BATCHES = [ 'GLB-B03', 'HYD-B10', 'KARAMA-08']
     STATUS = ['CallOut', 'Active', 'Drop-Out', 'Graduated', 'NextBatch', 'On-Hold', 'Pending',]
     NATURE = ['Exited', 'Soft',]

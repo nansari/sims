@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Messages</h1>
+    <a href="{{ url_for('send_message') }}">Send New Message</a>
+    <hr>
+    {% for message in messages %}
+        <div>
+            <p>
+                <b>{{ message.sender.username }}</b> to <b>{{ message.recipient.username }}</b>
+                <span class="float-end">{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+            </p>
+            <p>{{ message.body }}</p>
+        </div>
+        <hr>
+    {% endfor %}
+{% endblock %}

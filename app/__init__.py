@@ -1,3 +1,4 @@
+"""This is the main application package."""
 # app/__init__.py
 
 from flask import Flask

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Class Batch Status</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.status.label }}<br>
+            {{ form.status(size=16) }}
+            {% for error in form.status.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <hr>
+    <h2>Existing Class Batch Statuses</h2>
+    <ul>
+        {% for status in statuses %}
+        <li>{{ status.status }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Class Region</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.class_name_id.label }}<br>
+            {{ form.class_name_id() }}
+            {% for error in form.class_name_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_batch_id.label }}<br>
+            {{ form.class_batch_id() }}
+            {% for error in form.class_batch_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.section.label }}<br>
+            {{ form.section(size=1) }}
+            {% for error in form.section.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.description.label }}<br>
+            {{ form.description(size=255) }}
+            {% for error in form.description.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <hr>
+    <form action="" method="get">
+        <input type="text" name="search" placeholder="Search by section" value="{{ request.args.get('search', '') }}">
+        <input type="submit" value="Search">
+    </form>
+    <hr>
+    <h2>Existing Class Regions</h2>
+    <ul>
+        {% for region in regions %}
+        <li>{{ region.class_name.name }} - {{ region.class_batch.batch_no }} - {{ region.section }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
