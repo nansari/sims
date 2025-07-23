@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Class Region</h1>
+    <form method="POST" action="{{ url_for('update_class_region_item', id=region.id) }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            <label for="class_name_id" class="form-label">Class Name</label>
+            {{ form.class_name_id(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="class_batch_id" class="form-label">Class Batch</label>
+            {{ form.class_batch_id(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="section" class="form-label">Section</label>
+            {{ form.section(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            {{ form.description(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}

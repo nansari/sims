@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Class Group Index</h1>
+    <form method="POST" action="{{ url_for('update_class_group_index_item', id=index.id) }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            <label for="class_region_id" class="form-label">Class Region</label>
+            {{ form.class_region_id(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            {{ form.description(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="start_index" class="form-label">Start Index</label>
+            {{ form.start_index(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="end_index" class="form-label">End Index</label>
+            {{ form.end_index(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}

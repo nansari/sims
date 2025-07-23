@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Remove User Status</h1>
+    <form method="POST" action="{{ url_for('remove_user_status') }}" onsubmit="return confirm('Are you sure you want to delete the selected user statuses?');">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>Status</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for status in statuses %}
+                <tr>
+                    <td><input type="checkbox" name="status_ids" value="{{ status.id }}"></td>
+                    <td>{{ status.status }}</td>
+                    <td>{{ status.description }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-danger">Delete Selected</button>
+    </form>
+{% endblock %}
+
+{% block custom_scripts %}
+<script>
+    document.getElementById('select-all').onclick = function() {
+        var checkboxes = document.getElementsByName('status_ids');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
+</script>
+{% endblock %}

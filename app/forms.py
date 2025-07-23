@@ -133,6 +133,8 @@ class ClassRegionForm(FlaskForm):
 
 class ClassGroupIndexForm(FlaskForm):
     """ClassGroupIndex Form"""
+    class_name_id = SelectField('Class Name', coerce=int, validators=[DataRequired()])
+    class_batch_id = SelectField('Class Batch', coerce=int, validators=[DataRequired()])
     class_region_id = SelectField('Class Region', coerce=int, validators=[DataRequired()])
     description = StringField('Description', validators=[Optional(), Length(max=255)])
     start_index = IntegerField('Start Index', validators=[Optional()])
@@ -142,7 +144,9 @@ class ClassGroupIndexForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         """Initialize the form"""
         super(ClassGroupIndexForm, self).__init__(*args, **kwargs)
-        self.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.all()]
+        self.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
+        self.class_batch_id.choices = []
+        self.class_region_id.choices = []
 
 class ClassGroupMentorForm(FlaskForm):
     """ClassGroupMentor Form"""

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Search Class Group Mentor</h1>
+    <form method="POST" action="{{ url_for('search_class_group_mentor') }}">
+        {{ form.hidden_tag() }}
+        <div class="input-group mb-3">
+            <input type="text" name="search_term" class="form-control" placeholder="Search by user, class name, batch no, region, or group description">
+            <button class="btn btn-outline-secondary" type="submit">Search</button>
+        </div>
+    </form>
+
+    {% if mentors %}
+    <h2>Search Results</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Class Name</th>
+                <th>Batch No</th>
+                <th>Class Region</th>
+                <th>Class Group</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mentor in mentors %}
+            <tr>
+                <td>{{ mentor.id }}</td>
+                <td>{{ mentor.user.username }}</td>
+                <td>{{ mentor.class_name.name }}</td>
+                <td>{{ mentor.class_batch.batch_no }}</td>
+                <td>{{ mentor.class_region.section if mentor.class_region else '' }}</td>
+                <td>{{ mentor.class_group.description if mentor.class_group else '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endblock %}

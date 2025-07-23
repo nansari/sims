@@ -293,6 +293,20 @@ def api_location(city_id):
         }])
     return jsonify([])
 
+@app.route('/api/class_batches/<int:class_name_id>')
+@login_required
+def api_class_batches(class_name_id):
+    """Provides a list of class batches for a given class name."""
+    batches = db.session.scalars(sa.select(ClassBatch).where(ClassBatch.class_name_id == class_name_id)).all()
+    return jsonify([{'id': batch.id, 'name': batch.batch_no} for batch in batches])
+
+@app.route('/api/class_regions/<int:class_batch_id>')
+@login_required
+def api_class_regions(class_batch_id):
+    """Provides a list of class regions for a given class batch."""
+    regions = db.session.scalars(sa.select(ClassRegion).where(ClassRegion.class_batch_id == class_batch_id)).all()
+    return jsonify([{'id': region.id, 'name': region.section} for region in regions])
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -480,6 +494,82 @@ def class_group_mentor():
     mentors = ClassGroupMentor.query.all()
     return render_template('class_group_mentor.html', title='Class Group Mentor', form=form, mentors=mentors)
 
+@app.route('/list_class_group_mentors')
+@login_required
+def list_class_group_mentors():
+    """Renders the list_class_group_mentors page."""
+    mentors = ClassGroupMentor.query.all()
+    return render_template('list_class_group_mentors.html', title='List Class Group Mentors', mentors=mentors)
+
+
+@app.route('/remove_class_group_mentor', methods=['GET', 'POST'])
+@login_required
+def remove_class_group_mentor():
+    """Renders the remove_class_group_mentor page."""
+    if request.method == 'POST':
+        mentor_ids = request.form.getlist('mentor_ids')
+        if mentor_ids:
+            for mentor_id in mentor_ids:
+                mentor_to_delete = ClassGroupMentor.query.get(mentor_id)
+                db.session.delete(mentor_to_delete)
+            db.session.commit()
+            flash('Class group mentors deleted successfully!', 'success')
+        return redirect(url_for('remove_class_group_mentor'))
+    
+    mentors = ClassGroupMentor.query.all()
+    return render_template('remove_class_group_mentor.html', title='Remove Class Group Mentor', mentors=mentors)
+
+
+@app.route('/update_class_group_mentor', methods=['GET'])
+@login_required
+def update_class_group_mentor():
+    """Renders the update_class_group_mentor page."""
+    mentors = ClassGroupMentor.query.all()
+    return render_template('update_class_group_mentor.html', title='Update Class Group Mentor', mentors=mentors)
+
+
+@app.route('/update_class_group_mentor/<int:id>', methods=['GET', 'POST'])
+@login_required
+def update_class_group_mentor_item(id):
+    """Renders the update_class_group_mentor_item page."""
+    mentor = ClassGroupMentor.query.get_or_404(id)
+    form = ClassGroupMentorForm(obj=mentor)
+    if form.validate_on_submit():
+        mentor.user_id = form.user_id.data
+        mentor.class_name_id = form.class_name_id.data
+        mentor.class_batch_id = form.class_batch_id.data
+        mentor.class_region_id = form.class_region_id.data
+        mentor.class_group_id = form.class_group_id.data
+        mentor.updated_by = current_user.id
+        db.session.commit()
+        flash('Class group mentor updated successfully!', 'success')
+        return redirect(url_for('update_class_group_mentor'))
+    return render_template('update_class_group_mentor_item.html', title='Update Class Group Mentor', form=form, mentor=mentor)
+
+
+@app.route('/search_class_group_mentor', methods=['GET', 'POST'])
+@login_required
+def search_class_group_mentor():
+    """Renders the search_class_group_mentor page."""
+    form = ClassGroupMentorForm()
+    mentors = []
+    if request.method == 'POST':
+        search_term = request.form.get('search_term')
+        if search_term:
+            search_pattern = f'%{search_term}%'
+            mentors = db.session.query(ClassGroupMentor).join(mo.User).join(mo.ClassName).join(mo.ClassBatch).outerjoin(mo.ClassRegion).outerjoin(mo.ClassGroupIndex).filter(
+                sa.or_(
+                    mo.User.username.ilike(search_pattern),
+                    mo.ClassName.name.ilike(search_pattern),
+                    mo.ClassBatch.batch_no.ilike(search_pattern),
+                    mo.ClassRegion.section.ilike(search_pattern) if mo.ClassRegion.section is not None else False,
+                    mo.ClassGroupIndex.description.ilike(search_pattern) if mo.ClassGroupIndex.description is not None else False
+                )
+            ).all()
+        else:
+            flash('Please enter a search term.', 'warning')
+    return render_template('search_class_group_mentor.html', title='Search Class Group Mentor', form=form, mentors=mentors)
+
 @app.route('/user_status', methods=['GET', 'POST'])
 @login_required
 def user_status():
@@ -492,6 +582,75 @@ def user_status():
         return redirect(url_for('user_status'))
     statuses = UserStatus.query.all()
     return render_template('user_status.html', title='User Status', form=form, statuses=statuses)
+
+@app.route('/list_user_statuses')
+@login_required
+def list_user_statuses():
+    """Renders the list_user_statuses page."""
+    statuses = UserStatus.query.all()
+    return render_template('list_user_statuses.html', title='List User Statuses', statuses=statuses)
+
+
+@app.route('/remove_user_status', methods=['GET', 'POST'])
+@login_required
+def remove_user_status():
+    """Renders the remove_user_status page."""
+    if request.method == 'POST':
+        status_ids = request.form.getlist('status_ids')
+        if status_ids:
+            for status_id in status_ids:
+                status_to_delete = UserStatus.query.get(status_id)
+                db.session.delete(status_to_delete)
+            db.session.commit()
+            flash('User statuses deleted successfully!', 'success')
+        return redirect(url_for('remove_user_status'))
+    
+    statuses = UserStatus.query.all()
+    return render_template('remove_user_status.html', title='Remove User Status', statuses=statuses)
+
+
+@app.route('/update_user_status', methods=['GET'])
+@login_required
+def update_user_status():
+    """Renders the update_user_status page."""
+    statuses = UserStatus.query.all()
+    return render_template('update_user_status.html', title='Update User Status', statuses=statuses)
+
+
+@app.route('/update_user_status/<int:id>', methods=['GET', 'POST'])
+@login_required
+def update_user_status_item(id):
+    """Renders the update_user_status_item page."""
+    status = UserStatus.query.get_or_404(id)
+    form = UserStatusForm(obj=status)
+    if form.validate_on_submit():
+        status.status = form.status.data
+        status.description = form.description.data
+        db.session.commit()
+        flash('User status updated successfully!', 'success')
+        return redirect(url_for('update_user_status'))
+    return render_template('update_user_status_item.html', title='Update User Status', form=form, status=status)
+
+
+@app.route('/search_user_status', methods=['GET', 'POST'])
+@login_required
+def search_user_status():
+    """Renders the search_user_status page."""
+    form = UserStatusForm()
+    statuses = []
+    if request.method == 'POST':
+        search_term = request.form.get('search_term')
+        if search_term:
+            search_pattern = f'%{search_term}%'
+            statuses = UserStatus.query.filter(
+                sa.or_(
+                    UserStatus.status.ilike(search_pattern),
+                    UserStatus.description.ilike(search_pattern)
+                )
+            ).all()
+        else:
+            flash('Please enter a search term.', 'warning')
+    return render_template('search_user_status.html', title='Search User Status', form=form, statuses=statuses)
 
 @app.route('/student_group', methods=['GET', 'POST'])
 @login_required
@@ -743,5 +902,109 @@ def update_class_batch_item(id):
         flash('Class batch updated successfully!', 'success')
         return redirect(url_for('update_class_batch'))
     return render_template('update_class_batch_item.html', title='Update Class Batch', form=form, batch=batch)
+
+
+@app.route('/list_class_regions')
+@login_required
+def list_class_regions():
+    """Renders the list_class_regions page."""
+    regions = ClassRegion.query.all()
+    return render_template('list_class_regions.html', title='List Class Regions', regions=regions)
+
+
+@app.route('/remove_class_region', methods=['GET', 'POST'])
+@login_required
+def remove_class_region():
+    """Renders the remove_class_region page."""
+    if request.method == 'POST':
+        region_ids = request.form.getlist('region_ids')
+        if region_ids:
+            for region_id in region_ids:
+                region_to_delete = ClassRegion.query.get(region_id)
+                db.session.delete(region_to_delete)
+            db.session.commit()
+            flash('Class regions deleted successfully!', 'success')
+        return redirect(url_for('remove_class_region'))
+    
+    regions = ClassRegion.query.all()
+    return render_template('remove_class_region.html', title='Remove Class Region', regions=regions)
+
+
+@app.route('/update_class_region', methods=['GET'])
+@login_required
+def update_class_region():
+    """Renders the update_class_region page."""
+    regions = ClassRegion.query.all()
+    return render_template('update_class_region.html', title='Update Class Region', regions=regions)
+
+
+@app.route('/update_class_region/<int:id>', methods=['GET', 'POST'])
+@login_required
+def update_class_region_item(id):
+    """Renders the update_class_region_item page."""
+    region = ClassRegion.query.get_or_404(id)
+    form = ClassRegionForm(obj=region)
+    if form.validate_on_submit():
+        region.class_name_id = form.class_name_id.data
+        region.class_batch_id = form.class_batch_id.data
+        region.section = form.section.data
+        region.description = form.description.data
+        region.updated_by = current_user.id
+        db.session.commit()
+        flash('Class region updated successfully!', 'success')
+        return redirect(url_for('update_class_region'))
+    return render_template('update_class_region_item.html', title='Update Class Region', form=form, region=region)
+
+
+@app.route('/list_class_group_indexes')
+@login_required
+def list_class_group_indexes():
+    """Renders the list_class_group_indexes page."""
+    indexes = ClassGroupIndex.query.all()
+    return render_template('list_class_group_indexes.html', title='List Class Group Indexes', indexes=indexes)
+
+
+@app.route('/remove_class_group_index', methods=['GET', 'POST'])
+@login_required
+def remove_class_group_index():
+    """Renders the remove_class_group_index page."""
+    if request.method == 'POST':
+        index_ids = request.form.getlist('index_ids')
+        if index_ids:
+            for index_id in index_ids:
+                index_to_delete = ClassGroupIndex.query.get(index_id)
+                db.session.delete(index_to_delete)
+            db.session.commit()
+            flash('Class group indexes deleted successfully!', 'success')
+        return redirect(url_for('remove_class_group_index'))
+    
+    indexes = ClassGroupIndex.query.all()
+    return render_template('remove_class_group_index.html', title='Remove Class Group Index', indexes=indexes)
+
+
+@app.route('/update_class_group_index', methods=['GET'])
+@login_required
+def update_class_group_index():
+    """Renders the update_class_group_index page."""
+    indexes = ClassGroupIndex.query.all()
+    return render_template('update_class_group_index.html', title='Update Class Group Index', indexes=indexes)
+
+
+@app.route('/update_class_group_index/<int:id>', methods=['GET', 'POST'])
+@login_required
+def update_class_group_index_item(id):
+    """Renders the update_class_group_index_item page."""
+    index = ClassGroupIndex.query.get_or_404(id)
+    form = ClassGroupIndexForm(obj=index)
+    if form.validate_on_submit():
+        index.class_region_id = form.class_region_id.data
+        index.description = form.description.data
+        index.start_index = form.start_index.data
+        index.end_index = form.end_index.data
+        index.updated_by = current_user.id
+        db.session.commit()
+        flash('Class group index updated successfully!', 'success')
+        return redirect(url_for('update_class_group_index'))
+    return render_template('update_class_group_index_item.html', title='Update Class Group Index', form=form, index=index)
 
 

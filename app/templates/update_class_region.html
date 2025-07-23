@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Class Region</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Class Name</th>
+                <th>Batch No</th>
+                <th>Section</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for region in regions %}
+            <tr>
+                <td>{{ region.class_name.name }}</td>
+                <td>{{ region.class_batch.batch_no }}</td>
+                <td>{{ region.section }}</td>
+                <td><a href="{{ url_for('update_class_region_item', id=region.id) }}" class="btn btn-primary">Edit</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

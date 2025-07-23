@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Class Group Mentor</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Class Name</th>
+                <th>Batch No</th>
+                <th>Class Region</th>
+                <th>Class Group</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mentor in mentors %}
+            <tr>
+                <td>{{ mentor.user.username }}</td>
+                <td>{{ mentor.class_name.name }}</td>
+                <td>{{ mentor.class_batch.batch_no }}</td>
+                <td>{{ mentor.class_region.section if mentor.class_region else '' }}</td>
+                <td>{{ mentor.class_group.description if mentor.class_group else '' }}</td>
+                <td><a href="{{ url_for('update_class_group_mentor_item', id=mentor.id) }}" class="btn btn-primary">Edit</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update User Status</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for status in statuses %}
+            <tr>
+                <td>{{ status.status }}</td>
+                <td>{{ status.description }}</td>
+                <td><a href="{{ url_for('update_user_status_item', id=status.id) }}" class="btn btn-primary">Edit</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

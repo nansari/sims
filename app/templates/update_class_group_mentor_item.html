@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Class Group Mentor</h1>
+    <form method="POST" action="{{ url_for('update_class_group_mentor_item', id=mentor.id) }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            <label for="user_id" class="form-label">User</label>
+            {{ form.user_id(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="class_name_id" class="form-label">Class Name</label>
+            {{ form.class_name_id(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="class_batch_id" class="form-label">Class Batch</label>
+            {{ form.class_batch_id(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="class_region_id" class="form-label">Class Region</label>
+            {{ form.class_region_id(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="class_group_id" class="form-label">Class Group</label>
+            {{ form.class_group_id(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}

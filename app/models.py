@@ -98,6 +98,7 @@ class ClassBatch(BaseModel):
 
     class_name: so.Mapped['ClassName'] = so.relationship()
     status: so.Mapped['ClassBatchStatus'] = so.relationship()
+    __table_args__ = (sa.UniqueConstraint('class_name_id', 'batch_no'),)
 
 class ClassRegion(BaseModel):
     """ClassRegion model."""
@@ -109,6 +110,7 @@ class ClassRegion(BaseModel):
 
     class_name: so.Mapped['ClassName'] = so.relationship()
     class_batch: so.Mapped['ClassBatch'] = so.relationship()
+    __table_args__ = (sa.UniqueConstraint('class_name_id', 'class_batch_id', 'section'),)
 
 class ClassGroupIndex(BaseModel):
     """ClassGroupIndex model."""

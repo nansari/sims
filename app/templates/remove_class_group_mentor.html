@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Remove Class Group Mentor</h1>
+    <form method="POST" action="{{ url_for('remove_class_group_mentor') }}" onsubmit="return confirm('Are you sure you want to delete the selected class group mentors?');">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>User</th>
+                    <th>Class Name</th>
+                    <th>Batch No</th>
+                    <th>Class Region</th>
+                    <th>Class Group</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mentor in mentors %}
+                <tr>
+                    <td><input type="checkbox" name="mentor_ids" value="{{ mentor.id }}"></td>
+                    <td>{{ mentor.user.username }}</td>
+                    <td>{{ mentor.class_name.name }}</td>
+                    <td>{{ mentor.class_batch.batch_no }}</td>
+                    <td>{{ mentor.class_region.section if mentor.class_region else '' }}</td>
+                    <td>{{ mentor.class_group.description if mentor.class_group else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-danger">Delete Selected</button>
+    </form>
+{% endblock %}
+
+{% block custom_scripts %}
+<script>
+    document.getElementById('select-all').onclick = function() {
+        var checkboxes = document.getElementsByName('mentor_ids');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
+</script>
+{% endblock %}
