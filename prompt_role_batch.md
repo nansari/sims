@@ -12,7 +12,7 @@
 - status: foreing key to ClassBatchStatus table
 
 ### 3: ClassBatchStaus - a lookup table
-- status: Registration, InProgress, Cancelled, Completed, Terminatred
+- status: Registration, InProgress, Terminated, Completed, Terminated
 
 ### 4. ClassRegion - a subgroup of class batch
 - class_name_id : foreign key to ClassName table
