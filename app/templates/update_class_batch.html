@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Class Batch</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Class Name</th>
+                <th>Batch No</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for batch in batches %}
+            <tr>
+                <td>{{ batch.class_name.name }}</td>
+                <td>{{ batch.batch_no }}</td>
+                <td><a href="{{ url_for('update_class_batch_item', id=batch.id) }}" class="btn btn-primary">Edit</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

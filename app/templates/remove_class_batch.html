@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Remove Class Batch</h1>
+    <form method="POST" action="{{ url_for('remove_class_batch') }}" onsubmit="return confirm('Are you sure you want to delete the selected class batches?');">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>Class Name</th>
+                    <th>Batch No</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for batch in batches %}
+                <tr>
+                    <td><input type="checkbox" name="batch_ids" value="{{ batch.id }}"></td>
+                    <td>{{ batch.class_name.name }}</td>
+                    <td>{{ batch.batch_no }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-danger">Delete Selected</button>
+    </form>
+{% endblock %}
+
+{% block custom_scripts %}
+<script>
+    document.getElementById('select-all').onclick = function() {
+        var checkboxes = document.getElementsByName('batch_ids');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
+</script>
+{% endblock %}

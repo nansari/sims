@@ -693,3 +693,55 @@ def update_class_batch_status_item(id):
     return render_template('update_class_batch_status_item.html', title='Update Class Batch Status', form=form, status=status)
 
 
+@app.route('/list_class_batches')
+@login_required
+def list_class_batches():
+    """Renders the list_class_batches page."""
+    batches = ClassBatch.query.all()
+    return render_template('list_class_batches.html', title='List Class Batches', batches=batches)
+
+
+@app.route('/remove_class_batch', methods=['GET', 'POST'])
+@login_required
+def remove_class_batch():
+    """Renders the remove_class_batch page."""
+    if request.method == 'POST':
+        batch_ids = request.form.getlist('batch_ids')
+        if batch_ids:
+            for batch_id in batch_ids:
+                batch_to_delete = ClassBatch.query.get(batch_id)
+                db.session.delete(batch_to_delete)
+            db.session.commit()
+            flash('Class batches deleted successfully!', 'success')
+        return redirect(url_for('remove_class_batch'))
+    
+    batches = ClassBatch.query.all()
+    return render_template('remove_class_batch.html', title='Remove Class Batch', batches=batches)
+
+
+@app.route('/update_class_batch', methods=['GET'])
+@login_required
+def update_class_batch():
+    """Renders the update_class_batch page."""
+    batches = ClassBatch.query.all()
+    return render_template('update_class_batch.html', title='Update Class Batch', batches=batches)
+
+
+@app.route('/update_class_batch/<int:id>', methods=['GET', 'POST'])
+@login_required
+def update_class_batch_item(id):
+    """Renders the update_class_batch_item page."""
+    batch = ClassBatch.query.get_or_404(id)
+    form = ClassBatchForm(obj=batch)
+    if form.validate_on_submit():
+        batch.class_name_id = form.class_name_id.data
+        batch.batch_no = form.batch_no.data
+        batch.start_date = form.start_date.data
+        batch.status_id = form.status_id.data
+        batch.updated_by = current_user.id
+        db.session.commit()
+        flash('Class batch updated successfully!', 'success')
+        return redirect(url_for('update_class_batch'))
+    return render_template('update_class_batch_item.html', title='Update Class Batch', form=form, batch=batch)
+
+

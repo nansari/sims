@@ -243,33 +243,37 @@
             const darkModeToggle = document.getElementById('darkModeToggle');
 
             const submenuItems = {
+                // add: [
+                //     const submenuItems = {
                 add: [
                     { icon: 'fa-user-plus', text: 'User Form', href:  "{{ url_for('user_reg') }}" },
                     { icon: 'fa-user-plus', text: 'User WA Text', href:  "{{ url_for('reg_from_wa_text') }}" },
-                    { icon: 'fa-users', text: 'Batch', href: '{{ url_for('class_batch') }}' },
-                    { icon: 'fa-user-tag', text: 'Roles', href: '{{ url_for('role') }}' },
+                    { icon: 'fa-user-tag', text: 'Roles', href: "{{ url_for('role') }}" },
                     { icon: 'fa-school', text: 'Next Class', href: '#' },
-                    { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('class_name') }}' },
-                    { icon: 'fa-sitemap', text: 'Class Region', href: '{{ url_for('class_region') }}' },
-                    { icon: 'fa-sitemap', text: 'Class Group Index', href: '{{ url_for('class_group_index') }}' },
-                    { icon: 'fa-chalkboard-teacher', text: 'Class Group Mentor', href: '{{ url_for('class_group_mentor') }}' },
-                    { icon: 'fa-user-check', text: 'User Status', href: '{{ url_for('user_status') }}' },
-                    { icon: 'fa-users-class', text: 'Student Group', href: '{{ url_for('student_group') }}' },
-                    { icon: 'fa-chalkboard-teacher', text: 'Class Batch Teacher', href: '{{ url_for('class_batch_teacher') }}' },
-                    { icon: 'fa-user-tag', text: 'User Role', href: '{{ url_for('user_role') }}' },
-                    { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('class_batch_status') }}' }
+                    { icon: 'fa-sitemap', text: 'Class Name', href: "{{ url_for('class_name') }}" },
+                    { icon: 'fa-users', text: 'Class Batch', href: "{{ url_for('class_batch') }}" },
+                    { icon: 'fa-sitemap', text: 'Class Region', href: "{{ url_for('class_region') }}" },
+                    { icon: 'fa-sitemap', text: 'Class Group Index', href: "{{ url_for('class_group_index') }}" },
+                    { icon: 'fa-chalkboard-teacher', text: 'Class Group Mentor', href: "{{ url_for('class_group_mentor') }}" },
+                    { icon: 'fa-user-check', text: 'User Status', href: "{{ url_for('user_status') }}" },
+                    { icon: 'fa-users-class', text: 'Student Group', href: "{{ url_for('student_group') }}" },
+                    { icon: 'fa-chalkboard-teacher', text: 'Class Batch Teacher', href: "{{ url_for('class_batch_teacher') }}" },
+                    { icon: 'fa-user-tag', text: 'User Role', href: "{{ url_for('user_role') }}" },
+                    { icon: 'fa-check-circle', text: 'Class Batch Status', href: "{{ url_for('class_batch_status') }}" }
                 ],
                 remove: [
-                    { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('remove_class_batch_status') }}' },
-                    { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('remove_class_name') }}' },
+                    { icon: 'fa-check-circle', text: 'Class Batch Status', href: "{{ url_for('remove_class_batch_status') }}" },
+                    { icon: 'fa-sitemap', text: 'Class Name', href: "{{ url_for('remove_class_name') }}" },
+                    { icon: 'fa-users', text: 'Class Batch', href: "{{ url_for('remove_class_batch') }}" },
                     { icon: 'fa-phone-slash', text: 'Phone', href: '#' },
                     { icon: 'fa-map-marker-alt', text: 'Address', href: '#' },
                     { icon: 'fa-clock', text: 'Call Time', href: '#' },
                     { icon: 'fa-user-minus', text: 'Role', href: '#' }
                 ],
                 update: [
-                    { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('update_class_batch_status') }}' },
-                    { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('update_class_name') }}' },
+                    { icon: 'fa-check-circle', text: 'Class Batch Status', href: "{{ url_for('update_class_batch_status') }}" },
+                    { icon: 'fa-sitemap', text: 'Class Name', href: "{{ url_for('update_class_name') }}" },
+                    { icon: 'fa-users', text: 'Class Batch', href: "{{ url_for('update_class_batch') }}" },
                     { icon: 'fa-user-edit', text: 'User', href: '#' },
                     { icon: 'fa-address-book', text: 'Contact', href: '#' },
                     { icon: 'fa-phone', text: 'Phone', href: '#' },
@@ -280,19 +284,20 @@
                     { icon: 'fa-edit', text: 'Class', href: '#' }
                 ],
                 list: [
-                    { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('list_class_batch_statuses') }}' },
-                    { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('list_class_names') }}' },
+                    { icon: 'fa-check-circle', text: 'Class Batch Status', href: "{{ url_for('list_class_batch_statuses') }}" },
+                    { icon: 'fa-sitemap', text: 'Class Name', href: "{{ url_for('list_class_names') }}" },
+                    { icon: 'fa-users', text: 'Class Batch', href: "{{ url_for('list_class_batches') }}" },
                     { icon: 'fa-user-edit', text: 'User', href: '#' },
                     { icon: 'fa-address-book', text: 'Contact', href: '#' },
                     { icon: 'fa-phone', text: 'Phone', href: '#' },
                     { icon: 'fa-users-cog', text: 'Batch', href: '#' },
-                    { icon: 'fa-user-shield', text: 'Role', href: '{{ url_for('list_roles') }}' },
+                    { icon: 'fa-user-shield', text: 'Role', href: "{{ url_for('list_roles') }}" },
                     { icon: 'fa-calendar-alt', text: 'Call Time', href: '#' },
                     { icon: 'fa-chalkboard-teacher', text: 'Mentor', href: '#' },
                     { icon: 'fa-edit', text: 'Class', href: '#' }
                 ],
                 search: [
-                    { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('search_class_name') }}' },
+                    { icon: 'fa-sitemap', text: 'Class Name', href: "{{ url_for('search_class_name') }}" },
                     { icon: 'fa-user-edit', text: 'User', href: '#' },
                     { icon: 'fa-map-marker-alt', text: 'Location', href: "{{ url_for('location') }}" },
                     { icon: 'fa-address-book', text: 'Contact', href: '#' },

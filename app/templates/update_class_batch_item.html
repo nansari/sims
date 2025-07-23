@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Class Batch</h1>
+    <form method="POST" action="{{ url_for('update_class_batch_item', id=batch.id) }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            <label for="class_name_id" class="form-label">Class Name</label>
+            {{ form.class_name_id(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="batch_no" class="form-label">Batch No</label>
+            {{ form.batch_no(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="start_date" class="form-label">Start Date</label>
+            {{ form.start_date(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label for="status_id" class="form-label">Status</label>
+            {{ form.status_id(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}
