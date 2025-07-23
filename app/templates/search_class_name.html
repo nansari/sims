@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Search Class Name</h1>
+    <form method="POST" action="{{ url_for('search_class_name') }}">
+        {{ form.hidden_tag() }}
+        <div class="input-group mb-3">
+            <input type="text" name="search_term" class="form-control" placeholder="Enter at least 3 characters" minlength="3" required>
+            <button class="btn btn-outline-secondary" type="submit">Search</button>
+        </div>
+    </form>
+
+    {% if class_names %}
+    <h2>Search Results</h2>
+    <ul class="list-group">
+        {% for class_name in class_names %}
+        <li class="list-group-item">{{ class_name.name }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+{% endblock %}

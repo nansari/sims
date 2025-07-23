@@ -1,4 +1,4 @@
--- DELETE FROM role;
+DELETE FROM role;
 -- DELETE FROM password WHERE id == 1;
 -- DELETE FROM user WHERE id = 1;
 INSERT INTO role (role, level,description ) VALUES 

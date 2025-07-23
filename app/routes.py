@@ -47,7 +47,7 @@ def login():
         user = db.session.scalar(
             sa.select(mo.User).where(mo.User.email == form.email.data))
         if user is None or not user.check_password(form.password.data):
-            flash(f'Invalid email or password {form.email.data} {user.email}')
+            flash('Invalid email or password', 'danger')
             # flash('Invalid email or password')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
@@ -579,5 +579,69 @@ def class_batch_status():
         return redirect(url_for('class_batch_status'))
     statuses = ClassBatchStatus.query.all()
     return render_template('class_batch_status.html', title='Class Batch Status', form=form, statuses=statuses)
+
+
+@app.route('/list_class_names')
+@login_required
+def list_class_names():
+    """Renders the list_class_names page."""
+    class_names = ClassName.query.all()
+    return render_template('list_class_names.html', title='List Class Names', class_names=class_names)
+
+
+@app.route('/search_class_name', methods=['GET', 'POST'])
+@login_required
+def search_class_name():
+    """Renders the search_class_name page."""
+    form = ClassNameForm()
+    class_names = []
+    if request.method == 'POST':
+        search_term = request.form.get('search_term')
+        if search_term and len(search_term) >= 3:
+            class_names = ClassName.query.filter(ClassName.name.ilike(f'%{search_term}%')).all()
+        else:
+            flash('Please enter at least 3 characters to search.', 'warning')
+    return render_template('search_class_name.html', title='Search Class Name', form=form, class_names=class_names)
+
+
+@app.route('/remove_class_name', methods=['GET', 'POST'])
+@login_required
+def remove_class_name():
+    """Renders the remove_class_name page."""
+    if request.method == 'POST':
+        class_ids = request.form.getlist('class_ids')
+        if class_ids:
+            for class_id in class_ids:
+                class_to_delete = ClassName.query.get(class_id)
+                db.session.delete(class_to_delete)
+            db.session.commit()
+            flash('Class names deleted successfully!', 'success')
+        return redirect(url_for('remove_class_name'))
+    
+    class_names = ClassName.query.all()
+    return render_template('remove_class_name.html', title='Remove Class Name', class_names=class_names)
+
+
+@app.route('/update_class_name', methods=['GET'])
+@login_required
+def update_class_name():
+    """Renders the update_class_name page."""
+    class_names = ClassName.query.all()
+    return render_template('update_class_name.html', title='Update Class Name', class_names=class_names)
+
+
+@app.route('/update_class_name/<int:id>', methods=['GET', 'POST'])
+@login_required
+def update_class_name_item(id):
+    """Renders the update_class_name_item page."""
+    class_name = ClassName.query.get_or_404(id)
+    form = ClassNameForm(obj=class_name)
+    if form.validate_on_submit():
+        class_name.name = form.name.data
+        class_name.updated_by = current_user.id
+        db.session.commit()
+        flash('Class name updated successfully!', 'success')
+        return redirect(url_for('update_class_name'))
+    return render_template('update_class_name_item.html', title='Update Class Name', form=form, class_name=class_name)
 
 
