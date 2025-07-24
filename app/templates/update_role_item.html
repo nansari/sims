@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Role</h1>
+    <form method="POST" action="{{ url_for('update_role_item', id=role.id) }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.role.label(class="form-label") }}
+            {{ form.role(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.level.label(class="form-label") }}
+            {{ form.level(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}

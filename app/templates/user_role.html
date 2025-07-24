@@ -19,16 +19,23 @@
             {% endfor %}
         </p>
         <p>
-            {{ form.class_region_id.label }}<br>
-            {{ form.class_region_id() }}
-            {% for error in form.class_region_id.errors %}
+            {{ form.class_name_id.label }}<br>
+            {{ form.class_name_id(id='class_name_id') }}
+            {% for error in form.class_name_id.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
         <p>
             {{ form.class_batch_id.label }}<br>
-            {{ form.class_batch_id() }}
+            {{ form.class_batch_id(id='class_batch_id') }}
             {% for error in form.class_batch_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_region_id.label }}<br>
+            {{ form.class_region_id(id='class_region_id') }}
+            {% for error in form.class_region_id.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
@@ -39,13 +46,56 @@
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
-        <p>{{ form.submit() }}</p>
+        <p>{{ form.submit() }} <a href="{{ url_for('index') }}" class="btn btn-primary">Back</a></p>
     </form>
     <hr>
     <h2>Existing User Roles</h2>
     <ul>
         {% for user_role in user_roles %}
-        <li>{{ user_role.user.username }} - {{ user_role.role.role }}</li>
+        <li>{{ user_role.user.username }} - {{ user_role.role.role }} - {{ user_role.class_batch.batch_no }} - {{ user_role.class_region.section if user_role.class_region else 'All' }} </li>
         {% endfor %}
     </ul>
+{% endblock %}
+
+{% block custom_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#class_name_id').on('change', function() {
+            var class_name_id = $(this).val();
+            if (class_name_id) {
+                $.ajax({
+                    url: '/api/class_batches/' + class_name_id,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#class_batch_id').empty().append('<option value="">Select Batch</option>');
+                        $.each(data, function(index, batch) {
+                            $('#class_batch_id').append('<option value="' + batch.id + '">' + batch.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#class_batch_id').empty().append('<option value="">Select Batch</option>');
+                $('#class_region_id').empty().append('<option value="">Select Region</option>');
+            }
+        });
+
+        $('#class_batch_id').on('change', function() {
+            var class_batch_id = $(this).val();
+            if (class_batch_id) {
+                $.ajax({
+                    url: '/api/class_regions/' + class_batch_id,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#class_region_id').empty().append('<option value="">All Regions</option>');
+                        $.each(data, function(index, region) {
+                            $('#class_region_id').append('<option value="' + region.id + '">' + region.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#class_region_id').empty().append('<option value="">Select Region</option>');
+            }
+        });
+    });
+</script>
 {% endblock %}

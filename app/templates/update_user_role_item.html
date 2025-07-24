@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.user_id.label }}<br>
+            {{ form.user_id(class="form-control") }}
+            {% for error in form.user_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.role_id.label }}<br>
+            {{ form.role_id(class="form-control") }}
+            {% for error in form.role_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_name_id.label }}<br>
+            {{ form.class_name_id(class="form-control") }}
+            {% for error in form.class_name_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_batch_id.label }}<br>
+            {{ form.class_batch_id(class="form-control") }}
+            {% for error in form.class_batch_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_region_id.label }}<br>
+            {{ form.class_region_id(class="form-control") }}
+            {% for error in form.class_region_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.class_group_id.label }}<br>
+            {{ form.class_group_id(class="form-control") }}
+            {% for error in form.class_group_id.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }} <a href="{{ url_for('update_user_role') }}" class="btn btn-danger">Cancel</a></p>
+    </form>
+{% endblock %}

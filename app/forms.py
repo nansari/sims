@@ -1,6 +1,12 @@
 # app/forms.py
 """
-This module contains the forms for the application.
+This module defines the forms used throughout the Flask application.
+
+It includes forms for user authentication (login, password), data entry for
+various models like ClassName, ClassBatch, ClassRegion, etc., and other
+specialized forms like WhatsApp registration and file uploads. The forms
+are built using Flask-WTF and WTForms, and they include validators to ensure
+the integrity of the submitted data.
 """
 import datetime
 from flask_wtf import FlaskForm
@@ -9,7 +15,7 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 
 import sqlalchemy as sa
 from app import db
-from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroupIndex, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus
+from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroupIndex, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, Countries
 
 from .config import Config
 
@@ -32,10 +38,23 @@ class PasswordForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class BatchForm(FlaskForm):
-    """ Batch Selection Form """
-    # batch = SelectField('Select Batch', choices=Config.BATCHES, coerce=str)
-    batch = SelectField('Select Batch', choices=Config.BATCHES)
+    """
+    A form for selecting a batch.
+
+    This form provides a dropdown field to select a class batch. The choices
+    are dynamically populated from the ClassBatch model.
+    """
+    batch = SelectField('Select Batch', coerce=int)
     submit = SubmitField('Generate')
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes the BatchForm.
+
+        It populates the 'batch' dropdown with all available class batches.
+        """
+        super(BatchForm, self).__init__(*args, **kwargs)
+        self.batch.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
 
 
 class RegFromWaText(FlaskForm):
@@ -44,8 +63,14 @@ class RegFromWaText(FlaskForm):
     register = SubmitField('Register')
 
 class UserRegForm(FlaskForm):
-    """ User Registration Form """
-    batch           = SelectField('Select Batch', choices=Config.BATCHES, default=Config.BATCHES[-1])
+    """
+    A form for registering new users.
+
+    This form collects all the necessary information for creating a new user,
+    including personal details, contact information, and batch selection.
+    The batch choices are dynamically populated from the ClassBatch model.
+    """
+    batch           = SelectField('Select Batch', coerce=int)
     email           = EmailField('Email', validators=[DataRequired()])
     username        = TelField('Name', validators=[DataRequired()])
     visa_type       = TelField('Visa Type', validators=[])
@@ -56,18 +81,29 @@ class UserRegForm(FlaskForm):
     hometowncity    = TelField('Hometown City', validators=[DataRequired()])
     hometowndistrict = TelField('Hometown District', validators=[DataRequired()])
     hometownstate   = TelField('Hometown State', validators=[DataRequired()])
-    hometowncountry = SelectField('Hometown Country', choices=Config.COUNTRIES, validators=[DataRequired()])
+    hometowncountry = SelectField('Hometown Country', coerce=int, validators=[DataRequired()])
     residencecity   = TelField('Current Residence City', validators=[DataRequired()])
     residencestate  = TelField('Current Residence State', validators=[DataRequired()])
-    residentcountry = SelectField('Current Residence Country', choices=Config.COUNTRIES, validators=[DataRequired()])
+    residentcountry = SelectField('Current Residence Country', coerce=int, validators=[DataRequired()])
     residentzip     = TelField('Current Residence Pin/Zip', validators=[])
     education       = TelField('Highest Education', validators=[DataRequired()])
     profession      = TelField('Profession', validators=[DataRequired()])
     referrer_id     = IntegerField('Referred By ID', validators=[], default=0)
-    status          = SelectField('Status', choices=Config.STATUS, default=Config.STATUS[0], validators=[])
+    status          = SelectField('Status', coerce=int, validators=[])
     bio             = TextAreaField('Notes', validators=[], render_kw={"rows": 2, "cols": 80})    
     register        = SubmitField('Register')
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes the UserRegForm.
+
+        It populates the 'batch' dropdown with all available class batches.
+        """
+        super(UserRegForm, self).__init__(*args, **kwargs)
+        self.batch.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
+        self.hometowncountry.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
+        self.residentcountry.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
+        self.status.choices = [(s.id, s.status) for s in UserStatus.query.all()]
 
     def validate_username(self, username):
         """Validate username"""
@@ -118,7 +154,13 @@ class ClassBatchForm(FlaskForm):
         self.status_id.choices = [(s.id, s.status) for s in ClassBatchStatus.query.all()]
 
 class ClassRegionForm(FlaskForm):
-    """ClassRegion Form"""
+    """
+    A form for creating and updating ClassRegion objects.
+
+    This form includes fields for selecting a class name and a class batch,
+    and for entering a section and a description. The class batch dropdown
+    is populated dynamically based on the selected class name.
+    """
     class_name_id = SelectField('Class Name', coerce=int, validators=[DataRequired()])
     class_batch_id = SelectField('Class Batch', coerce=int, validators=[DataRequired()])
     section = StringField('Section', validators=[DataRequired(), Length(max=1)])
@@ -126,10 +168,16 @@ class ClassRegionForm(FlaskForm):
     submit = SubmitField('Submit')
 
     def __init__(self, *args, **kwargs):
-        """Initialize the form"""
+        """
+        Initializes the ClassRegionForm.
+
+        It populates the 'class_name_id' dropdown with all available class names
+        and leaves the 'class_batch_id' dropdown empty, to be populated
+        dynamically.
+        """
         super(ClassRegionForm, self).__init__(*args, **kwargs)
         self.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
-        self.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
+        self.class_batch_id.choices = []
 
 class ClassGroupIndexForm(FlaskForm):
     """ClassGroupIndex Form"""
@@ -210,18 +258,20 @@ class UserRoleForm(FlaskForm):
     """UserRole Form"""
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
     role_id = SelectField('Role', coerce=int, validators=[DataRequired()])
-    class_region_id = SelectField('Class Region', coerce=int, validators=[Optional()])
-    class_batch_id = SelectField('Class Batch', coerce=int, validators=[Optional()])
-    class_group_id = SelectField('Class Group', coerce=int, validators=[Optional()])
+    class_name_id = SelectField('Class Name', coerce=int, validators=[DataRequired()])
+    class_batch_id = SelectField('Class Batch', coerce=int, validators=[DataRequired()])
+    class_region_id = SelectField('Class Region', coerce=lambda x: int(x) if x is not None and x != '' else None, validators=[Optional()])
+    class_group_id = SelectField('Class Group', coerce=lambda x: int(x) if x is not None and x != '' else None, validators=[Optional()])
     submit = SubmitField('Submit')
 
     def __init__(self, *args, **kwargs):
         """Initialize the form"""
         super(UserRoleForm, self).__init__(*args, **kwargs)
         self.user_id.choices = [(u.id, u.username) for u in User.query.all()]
-        self.role_id.choices = [(r.id, r.role) for r in Role.query.all()]
-        self.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.all()]
-        self.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
+        self.role_id.choices = [(r.id, r.role) for r in Role.query.order_by(Role.level).all()]
+        self.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
+        self.class_batch_id.choices = []
+        self.class_region_id.choices = [(None, 'All Regions')]
         self.class_group_id.choices = [(g.id, g.description) for g in ClassGroupIndex.query.all()]
 
 class ClassBatchStatusForm(FlaskForm):
@@ -239,4 +289,8 @@ class FileUploadForm(FlaskForm):
     """File Upload Form"""
     file = FileField('File', validators=[DataRequired()])
     submit = SubmitField('Upload')
+
+class EmptyForm(FlaskForm):
+    """An empty form for CSRF protection."""
+    pass
 

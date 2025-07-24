@@ -1,3 +1,13 @@
+# app/models.py
+"""
+This module defines the database models for the Flask application.
+
+It includes models for users, passwords, classes, batches, regions, groups,
+and other application-specific data structures. The models are defined using
+SQLAlchemy and include relationships between different tables. It also
+includes a base model with common fields for tracking creation and update
+timestamps and users.
+"""
 # https://github.com/dr5hn/countries-states-cities-database
 # https://flask-sqlalchemy.readthedocs.io/en/stable/
 # http://medium.com/@ramanbazhanau/mastering-sqlalchemy-a-comprehensive-guide-for-python-developers-ddb3d9f2e829
@@ -115,11 +125,10 @@ class ClassRegion(BaseModel):
 class ClassGroupIndex(BaseModel):
     """ClassGroupIndex model."""
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    class_region_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_region.id'), nullable=False)
+    class_region_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_region.id'), nullable=False, unique=True)
     description: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
     start_index: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
     end_index: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
-
     class_region: so.Mapped['ClassRegion'] = so.relationship()
 
 class ClassGroupMentor(BaseModel):

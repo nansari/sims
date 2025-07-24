@@ -40,27 +40,9 @@ The project is organized as follows:
 
 Never run application after making changes to code as I am running the flask in debug mode that restart itself on any code change.
 
-<!-- To run the application, you can use the following command:
-
-```bash
-flask run
-```
-
-Alternatively, you can run the `app.py` file directly:
-
-```bash
-python app.py
-``` -->
-<!-- 
-## Available Commands
-
-*   **Run tests:**
-    ```bash
-    python -m unittest discover tests
-    ``` -->
 # DOCUMENTATION
-- Create doc scring of each function, class and module to describe it
+- Do not waste time in adding doc strings to module, function, class. Leave the doc strings wherever it is already added.
 
 # IMPORTANT
-
+- Keep security on priority to secure the web app from hackers
 

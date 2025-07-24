@@ -5,21 +5,72 @@
     <form method="POST" action="{{ url_for('update_class_group_index_item', id=index.id) }}">
         {{ form.hidden_tag() }}
         <div class="mb-3">
-            <label for="class_region_id" class="form-label">Class Region</label>
-            {{ form.class_region_id(class="form-control") }}
+            {{ form.class_name_id.label(class="form-label") }}
+            {{ form.class_name_id(class="form-control", id='class_name_id') }}
         </div>
         <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
+            {{ form.class_batch_id.label(class="form-label") }}
+            {{ form.class_batch_id(class="form-control", id='class_batch_id') }}
+        </div>
+        <div class="mb-3">
+            {{ form.class_region_id.label(class="form-label") }}
+            {{ form.class_region_id(class="form-control", id='class_region_id') }}
+        </div>
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
             {{ form.description(class="form-control") }}
         </div>
         <div class="mb-3">
-            <label for="start_index" class="form-label">Start Index</label>
+            {{ form.start_index.label(class="form-label") }}
             {{ form.start_index(class="form-control") }}
         </div>
         <div class="mb-3">
-            <label for="end_index" class="form-label">End Index</label>
+            {{ form.end_index.label(class="form-label") }}
             {{ form.end_index(class="form-control") }}
         </div>
         <button type="submit" class="btn btn-primary">Update</button>
     </form>
+{% endblock %}
+
+{% block custom_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#class_name_id').on('change', function() {
+            var class_name_id = $(this).val();
+            if (class_name_id) {
+                $.ajax({
+                    url: '/api/class_batches/' + class_name_id,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#class_batch_id').empty().append('<option>Select Batch</option>');
+                        $.each(data, function(index, batch) {
+                            $('#class_batch_id').append('<option value="' + batch.id + '">' + batch.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#class_batch_id').empty().append('<option>Select Batch</option>');
+                $('#class_region_id').empty().append('<option>Select Region</option>');
+            }
+        });
+
+        $('#class_batch_id').on('change', function() {
+            var class_batch_id = $(this).val();
+            if (class_batch_id) {
+                $.ajax({
+                    url: '/api/class_regions/' + class_batch_id,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#class_region_id').empty().append('<option>Select Region</option>');
+                        $.each(data, function(index, region) {
+                            $('#class_region_id').append('<option value="' + region.id + '">' + region.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#class_region_id').empty().append('<option>Select Region</option>');
+            }
+        });
+    });
+</script>
 {% endblock %}

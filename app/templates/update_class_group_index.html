@@ -9,6 +9,8 @@
                 <th>Batch No</th>
                 <th>Class Region</th>
                 <th>Description</th>
+                <th>Start Index</th>
+                <th>End Index</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -19,6 +21,8 @@
                 <td>{{ index.class_region.class_batch.batch_no }}</td>
                 <td>{{ index.class_region.section }}</td>
                 <td>{{ index.description }}</td>
+                <td>{{ index.start_index }}</td>
+                <td>{{ index.end_index }}</td>
                 <td><a href="{{ url_for('update_class_group_index_item', id=index.id) }}" class="btn btn-primary">Edit</a></td>
             </tr>
             {% endfor %}

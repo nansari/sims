@@ -1,4 +1,12 @@
-#
+# app/routes.py
+"""
+This module defines the routes for the Flask application.
+
+It includes routes for user authentication (login, logout), registration,
+and various functionalities related to managing classes, batches, regions,
+groups, and other application-specific data. It also defines API endpoints
+for fetching data dynamically.
+"""
 import json
 from urllib.parse import urlsplit
 from flask import render_template, flash, redirect, url_for, request, send_file
@@ -296,7 +304,16 @@ def api_location(city_id):
 @app.route('/api/class_batches/<int:class_name_id>')
 @login_required
 def api_class_batches(class_name_id):
-    """Provides a list of class batches for a given class name."""
+    """
+    API endpoint to get class batches for a given class name ID.
+
+    Args:
+        class_name_id (int): The ID of the class name.
+
+    Returns:
+        A JSON response containing a list of class batches, each with an 'id'
+        and 'name'.
+    """
     batches = db.session.scalars(sa.select(ClassBatch).where(ClassBatch.class_name_id == class_name_id)).all()
     return jsonify([{'id': batch.id, 'name': batch.batch_no} for batch in batches])
 
@@ -450,7 +467,20 @@ def class_batch():
 @app.route('/class_region', methods=['GET', 'POST'])
 @login_required
 def class_region():
+    """
+    Renders the class region page and handles the creation of new class regions.
+
+    On GET request, it displays a form to create a new class region and a list
+    of existing regions.
+    On POST request, it validates the form data, creates a new ClassRegion object,
+    and saves it to the database.
+    """
     form = ClassRegionForm()
+    if request.method == 'POST':
+        class_name_id = request.form.get('class_name_id')
+        if class_name_id:
+            form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=class_name_id).all()]
+
     if form.validate_on_submit():
         class_region = ClassRegion(class_name_id=form.class_name_id.data, class_batch_id=form.class_batch_id.data, section=form.section.data, description=form.description.data, created_by=current_user.id, updated_by=current_user.id)
         db.session.add(class_region)
@@ -468,6 +498,14 @@ def class_region():
 @login_required
 def class_group_index():
     form = ClassGroupIndexForm()
+    if request.method == 'POST':
+        class_name_id = request.form.get('class_name_id')
+        class_batch_id = request.form.get('class_batch_id')
+        if class_name_id:
+            form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=class_name_id).all()]
+        if class_batch_id:
+            form.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()]
+
     if form.validate_on_submit():
         class_group_index = ClassGroupIndex(class_region_id=form.class_region_id.data, description=form.description.data, start_index=form.start_index.data, end_index=form.end_index.data, created_by=current_user.id, updated_by=current_user.id)
         db.session.add(class_group_index)
@@ -688,27 +726,205 @@ def role():
         db.session.commit()
         flash('Role added successfully!')
         return redirect(url_for('role'))
-    roles = Role.query.all()
+    roles = Role.query.order_by(Role.level).all()
     return render_template('role.html', title='Role', form=form, roles=roles)
+
+@app.route('/remove_role', methods=['GET', 'POST'])
+@login_required
+def remove_role():
+    if request.method == 'POST':
+        role_ids = request.form.getlist('role_ids')
+        if role_ids:
+            for role_id in role_ids:
+                role_to_delete = Role.query.get(role_id)
+                db.session.delete(role_to_delete)
+            db.session.commit()
+            flash('Roles deleted successfully!', 'success')
+        return redirect(url_for('remove_role'))
+    
+    roles = Role.query.order_by(Role.level).all()
+    return render_template('remove_role.html', title='Remove Role', roles=roles)
+
+@app.route('/update_role', methods=['GET'])
+@login_required
+def update_role():
+    roles = Role.query.order_by(Role.level).all()
+    return render_template('update_role.html', title='Update Role', roles=roles)
+
+@app.route('/update_role/<int:id>', methods=['GET', 'POST'])
+@login_required
+def update_role_item(id):
+    role = Role.query.get_or_404(id)
+    form = RoleForm(obj=role)
+    if form.validate_on_submit():
+        role.role = form.role.data
+        role.level = form.level.data
+        role.description = form.description.data
+        db.session.commit()
+        flash('Role updated successfully!', 'success')
+        return redirect(url_for('update_role'))
+    return render_template('update_role_item.html', title='Update Role', form=form, role=role)
 
 @app.route('/list_roles')
 @login_required
 def list_roles():
     """Renders the list_roles page."""
-    roles = Role.query.all()
+    roles = Role.query.order_by(Role.level).all()
     return render_template('list_roles.html', title='List Roles', roles=roles)
+
+
+@app.route('/remove_user_role', methods=['GET', 'POST'])
+@login_required
+def remove_user_role():
+    form = fo.EmptyForm()
+    if request.method == 'POST':
+        user_role_ids = request.form.getlist('user_role_ids')
+        if user_role_ids:
+            for user_role_id in user_role_ids:
+                user_role_to_delete = UserRole.query.get(user_role_id)
+                db.session.delete(user_role_to_delete)
+            db.session.commit()
+            flash('User roles deleted successfully!', 'success')
+        return redirect(url_for('remove_user_role'))
+    
+    user_roles = UserRole.query.all()
+    return render_template('remove_user_role.html', title='Remove User Role', user_roles=user_roles, form=form)
+
+
+@app.route('/update_user_role', methods=['GET'])
+@login_required
+def update_user_role():
+    query = UserRole.query
+    search = request.args.get('search')
+    if search:
+        query = query.join(mo.User, mo.User.id == mo.UserRole.user_id).join(mo.Role).join(mo.ClassBatch).outerjoin(mo.ClassRegion).filter(
+            sa.or_(
+                mo.User.username.ilike(f'%{search}%'),
+                mo.Role.role.ilike(f'%{search}%'),
+                mo.ClassBatch.batch_no.ilike(f'%{search}%'),
+                mo.ClassRegion.section.ilike(f'%{search}%')
+            )
+        )
+    user_roles = query.all()
+    return render_template('update_user_role.html', title='Update User Role', user_roles=user_roles)
+
+
+@app.route('/update_user_role/<int:id>', methods=['GET', 'POST'])
+@login_required
+def update_user_role_item(id):
+    user_role = UserRole.query.get_or_404(id)
+    form = UserRoleForm(obj=user_role)
+
+    # Populate class_name_id choices (always static)
+    form.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
+
+    # Determine current class_name_id, class_batch_id, class_region_id
+    # On POST, use submitted form data. On GET, use existing user_role data.
+    current_class_name_id = None
+    current_class_batch_id = None
+    current_class_region_id = None
+
+    if request.method == 'POST':
+        current_class_name_id = request.form.get('class_name_id', type=int)
+        current_class_batch_id = request.form.get('class_batch_id', type=int)
+        class_region_id_str = request.form.get('class_region_id')
+        current_class_region_id = int(class_region_id_str) if class_region_id_str and class_region_id_str != 'None' else None
+    else: # GET request
+        if user_role.class_batch:
+            current_class_name_id = user_role.class_batch.class_name_id
+        current_class_batch_id = user_role.class_batch_id
+        current_class_region_id = user_role.class_region_id
+
+    # Populate class_batch_id choices based on current_class_name_id
+    if current_class_name_id:
+        form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=current_class_name_id).all()]
+    else:
+        form.class_batch_id.choices = []
+
+    # Populate class_region_id choices based on current_class_batch_id
+    form.class_region_id.choices = [(None, 'All Regions')] # Always include 'All Regions'
+    if current_class_batch_id:
+        form.class_region_id.choices.extend([(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=current_class_batch_id).all()])
+    
+    # Populate class_group_id choices based on current_class_region_id
+    if current_class_region_id is not None: # Only filter if a specific region is selected (not 'All Regions')
+        form.class_group_id.choices = [(g.id, g.description) for g in ClassGroupIndex.query.filter_by(class_region_id=current_class_region_id).all()]
+        # If there are no groups for the selected region, still allow None
+        if not form.class_group_id.choices:
+            form.class_group_id.choices.insert(0, (None, ''))
+    else:
+        # If 'All Regions' is selected, allow None as a valid choice for Class Group
+        form.class_group_id.choices = [(None, '')] # Allow empty selection for Class Group
+
+    if form.validate_on_submit():
+        user_role.user_id = form.user_id.data
+        user_role.role_id = form.role_id.data
+        user_role.class_batch_id = form.class_batch_id.data
+        user_role.class_region_id = form.class_region_id.data # This will be None if 'All Regions' was selected
+        user_role.class_group_id = form.class_group_id.data
+        user_role.updated_by = current_user.id
+        db.session.commit()
+        flash('User role updated successfully!', 'success')
+        return redirect(url_for('update_user_role'))
+    elif request.method == 'POST': # Form did not validate on POST
+        flash('Please correct the errors below.', 'danger')
+        # The choices are already populated above, so no need to re-populate here.
+
+    return render_template('update_user_role_item.html', title='Update User Role', form=form, user_role=user_role)
+
+
+@app.route('/list_user_roles')
+@login_required
+def list_user_roles():
+    query = UserRole.query
+    search = request.args.get('search')
+    if search:
+        query = query.join(mo.User, mo.User.id == mo.UserRole.user_id).join(mo.Role).join(mo.ClassBatch).outerjoin(mo.ClassRegion).filter(
+            sa.or_(
+                mo.User.username.ilike(f'%{search}%'),
+                mo.Role.role.ilike(f'%{search}%'),
+                mo.ClassBatch.batch_no.ilike(f'%{search}%'),
+                mo.ClassRegion.section.ilike(f'%{search}%')
+            )
+        )
+    user_roles = query.all()
+    return render_template('list_user_roles.html', title='List User Roles', user_roles=user_roles)
 
 
 @app.route('/user_role', methods=['GET', 'POST'])
 @login_required
 def user_role():
     form = UserRoleForm()
+    if request.method == 'POST':
+        class_name_id = request.form.get('class_name_id')
+        class_batch_id = request.form.get('class_batch_id')
+        if class_name_id:
+            form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=class_name_id).all()]
+        if class_batch_id:
+            form.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()]
+
     if form.validate_on_submit():
-        user_role = UserRole(user_id=form.user_id.data, role_id=form.role_id.data, class_region_id=form.class_region_id.data, class_batch_id=form.class_batch_id.data, class_group_id=form.class_group_id.data, created_by=current_user.id, updated_by=current_user.id)
-        db.session.add(user_role)
+        user_id = form.user_id.data
+        role_id = form.role_id.data
+        class_batch_id = form.class_batch_id.data
+        class_region_id = form.class_region_id.data
+        class_group_id = form.class_group_id.data
+
+        if class_region_id and class_region_id != 0:
+            # Create a single user role for the specific region
+            user_role = UserRole(user_id=user_id, role_id=role_id, class_batch_id=class_batch_id, class_region_id=class_region_id, class_group_id=class_group_id, created_by=current_user.id, updated_by=current_user.id)
+            db.session.add(user_role)
+        else:
+            # Create user roles for all regions in the batch
+            regions = ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()
+            for region in regions:
+                user_role = UserRole(user_id=user_id, role_id=role_id, class_batch_id=class_batch_id, class_region_id=region.id, class_group_id=class_group_id, created_by=current_user.id, updated_by=current_user.id)
+                db.session.add(user_role)
+        
         db.session.commit()
-        flash('User role added successfully!')
+        flash('User role(s) added successfully!')
         return redirect(url_for('user_role'))
+        
     user_roles = UserRole.query.all()
     return render_template('user_role.html', title='User Role', form=form, user_roles=user_roles)
 
@@ -944,6 +1160,13 @@ def update_class_region_item(id):
     """Renders the update_class_region_item page."""
     region = ClassRegion.query.get_or_404(id)
     form = ClassRegionForm(obj=region)
+    form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=region.class_name_id).all()]
+
+    if request.method == 'POST':
+        class_name_id = request.form.get('class_name_id')
+        if class_name_id:
+            form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=class_name_id).all()]
+
     if form.validate_on_submit():
         region.class_name_id = form.class_name_id.data
         region.class_batch_id = form.class_batch_id.data
@@ -996,6 +1219,20 @@ def update_class_group_index_item(id):
     """Renders the update_class_group_index_item page."""
     index = ClassGroupIndex.query.get_or_404(id)
     form = ClassGroupIndexForm(obj=index)
+    
+    # Populate choices
+    form.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
+    form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=index.class_region.class_name_id).all()]
+    form.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=index.class_region.class_batch_id).all()]
+
+    if request.method == 'POST':
+        class_name_id = request.form.get('class_name_id')
+        class_batch_id = request.form.get('class_batch_id')
+        if class_name_id:
+            form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=class_name_id).all()]
+        if class_batch_id:
+            form.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()]
+
     if form.validate_on_submit():
         index.class_region_id = form.class_region_id.data
         index.description = form.description.data
@@ -1005,6 +1242,12 @@ def update_class_group_index_item(id):
         db.session.commit()
         flash('Class group index updated successfully!', 'success')
         return redirect(url_for('update_class_group_index'))
+        
+    # Pre-select values for GET request
+    form.class_name_id.data = index.class_region.class_name_id
+    form.class_batch_id.data = index.class_region.class_batch_id
+    form.class_region_id.data = index.class_region_id
+
     return render_template('update_class_group_index_item.html', title='Update Class Group Index', form=form, index=index)
 
 

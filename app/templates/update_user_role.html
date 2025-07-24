@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    <form method="get" action="{{ url_for('update_user_role') }}">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Search..." name="search" value="{{ request.args.get('search', '') }}">
+            <button class="btn btn-outline-secondary" type="submit">Search</button>
+        </div>
+    </form>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Class Name</th>
+                <th>Class Batch</th>
+                <th>Class Region</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user_role in user_roles %}
+                <tr>
+                    <td>{{ user_role.user.username }}</td>
+                    <td>{{ user_role.role.role }}</td>
+                    <td>{{ user_role.class_batch.class_name.name if user_role.class_batch else 'N/A' }}</td>
+                    <td>{{ user_role.class_batch.batch_no if user_role.class_batch else 'N/A' }}</td>
+                    <td>{{ user_role.class_region.section if user_role.class_region else 'All' }}</td>
+                    <td>
+                        <a href="{{ url_for('update_user_role_item', id=user_role.id) }}">Edit</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Back</a>
+{% endblock %}

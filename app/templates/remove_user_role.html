@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    <form method="get" action="{{ url_for('remove_user_role') }}">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Search..." name="search" value="{{ request.args.get('search', '') }}">
+            <button class="btn btn-outline-secondary" type="submit">Search</button>
+        </div>
+    </form>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select_all"></th>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Class Name</th>
+                    <th>Class Batch</th>
+                    <th>Class Region</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_role in user_roles %}
+                    <tr>
+                        <td><input type="checkbox" name="user_role_ids" value="{{ user_role.id }}" class="user_role_checkbox"></td>
+                        <td>{{ user_role.user.username }}</td>
+                        <td>{{ user_role.role.role }}</td>
+                        <td>{{ user_role.class_batch.class_name.name if user_role.class_batch else 'N/A' }}</td>
+                        <td>{{ user_role.class_batch.batch_no if user_role.class_batch else 'N/A' }}</td>
+                        <td>{{ user_role.class_region.section if user_role.class_region else 'All' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p><input type="submit" value="Delete Selected"> <a href="{{ url_for('remove_user_role') }}" class="btn btn-primary">Back</a></p>
+    </form>
+    <script>
+        document.getElementById('select_all').onclick = function() {
+            var checkboxes = document.getElementsByClassName('user_role_checkbox');
+            for (var checkbox of checkboxes) {
+                checkbox.checked = this.checked;
+            }
+        }
+    </script>
+{% endblock %}

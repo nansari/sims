@@ -52,7 +52,7 @@
     <h2>Existing Class Group Indexes</h2>
     <ul>
         {% for index in indexes %}
-        <li>{{ index.class_region.class_name.name }} - {{ index.class_region.class_batch.batch_no }} - {{ index.class_region.section }} - {{ index.description }}</li>
+        <li>{{ index.class_region.class_name.name }} - {{ index.class_region.class_batch.batch_no }} - {{ index.class_region.section }} - {{ index.description }} - {{ index.start_index }} - {{ index.end_index }}</li>
         {% endfor %}
     </ul>
 {% endblock %}

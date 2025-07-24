@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>All Existing Roles</h1>
+    <h1>Update Role</h1>
     <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Role</th>
                 <th>Level</th>
                 <th>Description</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for role in roles %}
             <tr>
-                <td>{{ role.id }}</td>
                 <td>{{ role.role }}</td>
                 <td>{{ role.level }}</td>
                 <td>{{ role.description }}</td>
+                <td><a href="{{ url_for('update_role_item', id=role.id) }}" class="btn btn-primary">Edit</a></td>
             </tr>
             {% endfor %}
         </tbody>

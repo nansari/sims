@@ -1,3 +1,11 @@
+<!--
+This template is used for the Class Region page. It allows users to create new
+class regions by filling out a form. The form includes dropdowns for class name
+and class batch, where the class batch dropdown is dynamically populated based
+on the selected class name using JavaScript.
+
+The template also displays a list of existing class regions.
+-->
 {% extends "base.html" %}
 
 {% block content %}
@@ -46,4 +54,38 @@
         <li>{{ region.class_name.name }} - {{ region.class_batch.batch_no }} - {{ region.section }}</li>
         {% endfor %}
     </ul>
+{% endblock %}
+
+{% block custom_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const classNameSelect = document.getElementById('class_name_id');
+        const classBatchSelect = document.getElementById('class_batch_id');
+
+        classNameSelect.addEventListener('change', function () {
+            const classNameId = this.value;
+            classBatchSelect.innerHTML = '<option value="">Loading...</option>';
+
+            if (classNameId) {
+                fetch(`/api/class_batches/${classNameId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        classBatchSelect.innerHTML = '<option value="">Select a Batch</option>';
+                        data.forEach(batch => {
+                            const option = document.createElement('option');
+                            option.value = batch.id;
+                            option.textContent = batch.name;
+                            classBatchSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching batches:', error);
+                        classBatchSelect.innerHTML = '<option value="">Error loading batches</option>';
+                    });
+            } else {
+                classBatchSelect.innerHTML = '<option value="">Select a Class Name first</option>';
+            }
+        });
+    });
+</script>
 {% endblock %}
