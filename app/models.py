@@ -65,21 +65,6 @@ class Password(db.Model):
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), unique=True)
     user: so.Mapped['User'] = so.relationship(back_populates='password')
     
-# class Post(db.Model):
-#     """Post model."""
-#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-#     body: so.Mapped[str] = so.mapped_column(sa.String(140))
-#     timestamp: so.Mapped[datetime] = so.mapped_column(
-#         index=True, default=lambda: datetime.now(timezone.utc))
-#     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id),
-#                                                index=True)
-
-#     author: so.Mapped[User] = so.relationship(back_populates='posts')
-
-#     def __repr__(self):
-#         return '<Post {}>'.format(self.body)
-
-
 class BaseModel(db.Model):
     """Base model for other models to inherit from."""
     __abstract__ = True
