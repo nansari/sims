@@ -1,4 +1,3 @@
-# TASKS TO IMPLEMENT
 ## Password Management related tools
 - Add Password submeuItems under Add, Remove, Update, List and Search Nav Menu
 - Create a '/app/templates/password_base.html' template that takes partial email address from Email table and to list all user ID, name, email address, country etc to select one of them
@@ -11,4 +10,3 @@
 - Password submeuItems under List Nav Menu should list all password entries from password table. truncate encrupted password to only 8 character while displaying it. If a partial email is given, refresh page to show only matching entry
 - Password submeuItems under Update Nav Menu should update a selected user password
 - Add a new Nav Menu "Check" and add a submenuItem Password to select a user with partial email and once selected, ask for the selected user password and flash message if it is valid or not.
-    
