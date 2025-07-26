@@ -5,9 +5,9 @@
     <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <p>
-            {{ form.student_id.label }}<br>
-            {{ form.student_id() }}
-            {% for error in form.student_id.errors %}
+            {{ form.user_id.label }}<br>
+            {{ form.user_id() }}
+            {% for error in form.user_id.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
@@ -38,7 +38,7 @@
     <h2>Existing Student Groups</h2>
     <ul>
         {% for group in groups %}
-        <li>{{ group.student.username }} - {{ group.class_group.description }}</li>
+        <li>{{ group.user.username }} - {{ group.class_group.description }}</li>
         {% endfor %}
     </ul>
 {% endblock %}

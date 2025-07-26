@@ -15,8 +15,8 @@ from io import BytesIO
 from flask_login import login_user, logout_user, current_user, login_required
 import sqlalchemy as sa
 from app import app, db
-from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupIndexForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm
-from app.models import ClassName, ClassBatch, ClassRegion, ClassGroupIndex, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus
+from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm
+from app.models import ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus
 # from app.forms import LoginForm, RegistrationForm
 # from app.models import User
 import app.forms as fo
@@ -335,7 +335,7 @@ def dashboard():
 
     # Data for charts
     student_status_data = db.session.query(mo.UserStatus.status, sa.func.count(mo.StudentGroup.id)).join(mo.StudentGroup).group_by(mo.UserStatus.status).all()
-    student_batch_data = db.session.query(mo.ClassBatch.batch_no, sa.func.count(mo.StudentGroup.id)).join(mo.ClassGroupIndex).join(mo.StudentGroup).join(mo.ClassRegion).join(mo.ClassBatch).group_by(mo.ClassBatch.batch_no).all()
+    student_batch_data = db.session.query(mo.ClassBatch.batch_no, sa.func.count(mo.StudentGroup.id)).join(mo.ClassGroup).join(mo.StudentGroup).join(mo.ClassRegion).join(mo.ClassBatch).group_by(mo.ClassBatch.batch_no).all()
 
     chart_data = {
         'student_status': {
@@ -494,10 +494,10 @@ def class_region():
     regions = query.all()
     return render_template('class_region.html', title='Class Region', form=form, regions=regions)
 
-@app.route('/class_group_index', methods=['GET', 'POST'])
+@app.route('/class_group', methods=['GET', 'POST'])
 @login_required
-def class_group_index():
-    form = ClassGroupIndexForm()
+def class_group():
+    form = ClassGroupForm()
     if request.method == 'POST':
         class_name_id = request.form.get('class_name_id')
         class_batch_id = request.form.get('class_batch_id')
@@ -507,17 +507,17 @@ def class_group_index():
             form.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()]
 
     if form.validate_on_submit():
-        class_group_index = ClassGroupIndex(class_region_id=form.class_region_id.data, description=form.description.data, start_index=form.start_index.data, end_index=form.end_index.data, created_by=current_user.id, updated_by=current_user.id)
-        db.session.add(class_group_index)
+        class_group = ClassGroup(name=form.name.data, class_region_id=form.class_region_id.data, description=form.description.data, start_index=form.start_index.data, end_index=form.end_index.data, created_by=current_user.id, updated_by=current_user.id)
+        db.session.add(class_group)
         db.session.commit()
-        flash('Class group index added successfully!')
-        return redirect(url_for('class_group_index'))
-    query = ClassGroupIndex.query
+        flash('Class group added successfully!')
+        return redirect(url_for('class_group'))
+    query = ClassGroup.query
     search = request.args.get('search')
     if search:
-        query = query.filter(ClassGroupIndex.description.like(f'%{search}%'))
+        query = query.filter(ClassGroup.description.like(f'%{search}%'))
     indexes = query.all()
-    return render_template('class_group_index.html', title='Class Group Index', form=form, indexes=indexes)
+    return render_template('class_group.html', title='Class Group Index', form=form, indexes=indexes)
 
 @app.route('/class_group_mentor', methods=['GET', 'POST'])
 @login_required
@@ -595,13 +595,13 @@ def search_class_group_mentor():
         search_term = request.form.get('search_term')
         if search_term:
             search_pattern = f'%{search_term}%'
-            mentors = db.session.query(ClassGroupMentor).join(mo.User).join(mo.ClassName).join(mo.ClassBatch).outerjoin(mo.ClassRegion).outerjoin(mo.ClassGroupIndex).filter(
+            mentors = db.session.query(ClassGroupMentor).join(mo.User).join(mo.ClassName).join(mo.ClassBatch).outerjoin(mo.ClassRegion).outerjoin(mo.ClassGroup).filter(
                 sa.or_(
                     mo.User.username.ilike(search_pattern),
                     mo.ClassName.name.ilike(search_pattern),
                     mo.ClassBatch.batch_no.ilike(search_pattern),
                     mo.ClassRegion.section.ilike(search_pattern) if mo.ClassRegion.section is not None else False,
-                    mo.ClassGroupIndex.description.ilike(search_pattern) if mo.ClassGroupIndex.description is not None else False
+                    mo.ClassGroup.description.ilike(search_pattern) if mo.ClassGroup.description is not None else False
                 )
             ).all()
         else:
@@ -695,7 +695,7 @@ def search_user_status():
 def student_group():
     form = StudentGroupForm()
     if form.validate_on_submit():
-        student_group = StudentGroup(student_id=form.student_id.data, class_group_id=form.class_group_id.data, index_no=form.index_no.data, status_id=form.status_id.data, created_by=current_user.id, updated_by=current_user.id)
+        student_group = StudentGroup(user_id=form.user_id.data, class_group_id=form.class_group_id.data, index_no=form.index_no.data, status_id=form.status_id.data, created_by=current_user.id, updated_by=current_user.id)
         db.session.add(student_group)
         db.session.commit()
         flash('Student group added successfully!')
@@ -848,7 +848,7 @@ def update_user_role_item(id):
     
     # Populate class_group_id choices based on current_class_region_id
     if current_class_region_id is not None: # Only filter if a specific region is selected (not 'All Regions')
-        form.class_group_id.choices = [(g.id, g.description) for g in ClassGroupIndex.query.filter_by(class_region_id=current_class_region_id).all()]
+        form.class_group_id.choices = [(g.id, g.description) for g in ClassGroup.query.filter_by(class_region_id=current_class_region_id).all()]
         # If there are no groups for the selected region, still allow None
         if not form.class_group_id.choices:
             form.class_group_id.choices.insert(0, (None, ''))
@@ -937,7 +937,7 @@ def user_profile(username):
         flash('User not found.')
         return redirect(url_for('index'))
     
-    student_groups = db.session.query(mo.StudentGroup).filter_by(student_id=user.id).all()
+    student_groups = db.session.query(mo.StudentGroup).filter_by(user_id=user.id).all()
     
     return render_template('user_profile.html', title='User Profile', user=user, student_groups=student_groups)
 
@@ -1179,46 +1179,46 @@ def update_class_region_item(id):
     return render_template('update_class_region_item.html', title='Update Class Region', form=form, region=region)
 
 
-@app.route('/list_class_group_indexes')
+@app.route('/list_class_groups')
 @login_required
-def list_class_group_indexes():
-    """Renders the list_class_group_indexes page."""
-    indexes = ClassGroupIndex.query.all()
-    return render_template('list_class_group_indexes.html', title='List Class Group Indexes', indexes=indexes)
+def list_class_groups():
+    """Renders the list_class_groups page."""
+    indexes = ClassGroup.query.all()
+    return render_template('list_class_groups.html', title='List Class Group Indexes', indexes=indexes)
 
 
-@app.route('/remove_class_group_index', methods=['GET', 'POST'])
+@app.route('/remove_class_group', methods=['GET', 'POST'])
 @login_required
-def remove_class_group_index():
-    """Renders the remove_class_group_index page."""
+def remove_class_group():
+    """Renders the remove_class_group page."""
     if request.method == 'POST':
         index_ids = request.form.getlist('index_ids')
         if index_ids:
             for index_id in index_ids:
-                index_to_delete = ClassGroupIndex.query.get(index_id)
+                index_to_delete = ClassGroup.query.get(index_id)
                 db.session.delete(index_to_delete)
             db.session.commit()
             flash('Class group indexes deleted successfully!', 'success')
-        return redirect(url_for('remove_class_group_index'))
+        return redirect(url_for('remove_class_group'))
     
-    indexes = ClassGroupIndex.query.all()
-    return render_template('remove_class_group_index.html', title='Remove Class Group Index', indexes=indexes)
+    indexes = ClassGroup.query.all()
+    return render_template('remove_class_group.html', title='Remove Class Group Index', indexes=indexes)
 
 
-@app.route('/update_class_group_index', methods=['GET'])
+@app.route('/update_class_group', methods=['GET'])
 @login_required
-def update_class_group_index():
-    """Renders the update_class_group_index page."""
-    indexes = ClassGroupIndex.query.all()
-    return render_template('update_class_group_index.html', title='Update Class Group Index', indexes=indexes)
+def update_class_group():
+    """Renders the update_class_group page."""
+    indexes = ClassGroup.query.all()
+    return render_template('update_class_group.html', title='Update Class Group Index', indexes=indexes)
 
 
-@app.route('/update_class_group_index/<int:id>', methods=['GET', 'POST'])
+@app.route('/update_class_group/<int:id>', methods=['GET', 'POST'])
 @login_required
-def update_class_group_index_item(id):
-    """Renders the update_class_group_index_item page."""
-    index = ClassGroupIndex.query.get_or_404(id)
-    form = ClassGroupIndexForm(obj=index)
+def update_class_group_item(id):
+    """Renders the update_class_group_item page."""
+    index = ClassGroup.query.get_or_404(id)
+    form = ClassGroupForm(obj=index)
     
     # Populate choices
     form.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
@@ -1234,20 +1234,21 @@ def update_class_group_index_item(id):
             form.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()]
 
     if form.validate_on_submit():
-        index.class_region_id = form.class_region_id.data
-        index.description = form.description.data
-        index.start_index = form.start_index.data
-        index.end_index = form.end_index.data
-        index.updated_by = current_user.id
+        group.name = form.name.data
+        group.class_region_id = form.class_region_id.data
+        group.description = form.description.data
+        group.start_index = form.start_index.data
+        group.end_index = form.end_index.data
+        group.updated_by = current_user.id
         db.session.commit()
-        flash('Class group index updated successfully!', 'success')
-        return redirect(url_for('update_class_group_index'))
+        flash('Class group updated successfully!', 'success')
+        return redirect(url_for('update_class_group'))
         
     # Pre-select values for GET request
-    form.class_name_id.data = index.class_region.class_name_id
-    form.class_batch_id.data = index.class_region.class_batch_id
-    form.class_region_id.data = index.class_region_id
+    form.class_name_id.data = group.class_region.class_name_id
+    form.class_batch_id.data = group.class_region.class_batch_id
+    form.class_region_id.data = group.class_region_id
 
-    return render_template('update_class_group_index_item.html', title='Update Class Group Index', form=form, index=index)
+    return render_template('update_class_group_item.html', title='Update Class Group', form=form, group=group)
 
 

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Class Group Index</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Class Name</th>
+                <th>Batch No</th>
+                <th>Class Region</th>
+                <th>Description</th>
+                <th>Start Index</th>
+                <th>End Index</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for index in indexes %}
+            <tr>
+                <td>{{ index.class_region.class_name.name }}</td>
+                <td>{{ index.class_region.class_batch.batch_no }}</td>
+                <td>{{ index.class_region.section }}</td>
+                <td>{{ group.name }}</td>
+                <td>{{ group.description }}</td>
+                <td>{{ group.start_index }}</td>
+                <td>{{ group.end_index }}</td>
+                <td><a href="{{ url_for('update_class_group_item', id=index.id) }}" class="btn btn-primary">Edit</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

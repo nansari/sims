@@ -21,7 +21,7 @@
 - description: One sentence description
 
 
-### 5. ClassGroupIndex - A sub group in a class region with start and end index. 
+### 5. ClassGroup - A sub group in a class region with start and end index. 
 - class_region_id : foreign key to ClassRegion table
 - description: One sentence description
 - start_index: number upto 4 digits (optional)
@@ -39,8 +39,8 @@
 - status: upto 16 caracter alpha like Active, Guest, DroppedOut, Terminated, Transfered, NextBatch, PassedAway
 - description: One sentence description
 
-### 8. StudentGroup - To assign a student to a group. Combination of class_group_id and student_id is unique
-- student_id : foreign key to Student table
+### 8. StudentGroup - To assign a student to a group. Combination of class_group_id and user_id is unique
+- user_id : foreign key to Student table
 - class_group_id : foreign key to ClassGroup table
 - index_no: number upto 4 digits between start_index and end_index of ClassGroup (optional)
 - status_id: foreign key to StudentStatus table
@@ -76,7 +76,7 @@ class_group_id: foreign key to ClassGroup table (optional)
 	1. ClassName
 	2. ClassBatch
 	3. ClassRegion
-	4. ClassGroupIndex
+	4. ClassGroup
 	5. ClassGroupMentor
 	6. UserStatus
 	7. StudentGroup

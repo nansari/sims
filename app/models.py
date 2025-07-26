@@ -62,9 +62,13 @@ class Password(db.Model):
     """Password model."""
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     password_hash: so.Mapped[str] = so.mapped_column(sa.String(256))
+    attempt_counts: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
+    is_allowed: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
+    last_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
+    last_successful_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
+    
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), unique=True)
     user: so.Mapped['User'] = so.relationship(back_populates='password')
-    
 class BaseModel(db.Model):
     """Base model for other models to inherit from."""
     __abstract__ = True
@@ -107,9 +111,10 @@ class ClassRegion(BaseModel):
     class_batch: so.Mapped['ClassBatch'] = so.relationship()
     __table_args__ = (sa.UniqueConstraint('class_name_id', 'class_batch_id', 'section'),)
 
-class ClassGroupIndex(BaseModel):
-    """ClassGroupIndex model."""
+class ClassGroup(BaseModel):
+    """ClassGroup model."""
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     class_region_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_region.id'), nullable=False, unique=True)
     description: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
     start_index: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
@@ -123,13 +128,13 @@ class ClassGroupMentor(BaseModel):
     class_name_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_name.id'), nullable=False)
     class_batch_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_batch.id'), nullable=False)
     class_region_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_region.id'), nullable=True)
-    class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group_index.id'), nullable=True)
+    class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group.id'), nullable=True)
 
     user: so.Mapped['User'] = so.relationship(foreign_keys=[user_id])
     class_name: so.Mapped['ClassName'] = so.relationship(foreign_keys=[class_name_id])
     class_batch: so.Mapped['ClassBatch'] = so.relationship(foreign_keys=[class_batch_id])
     class_region: so.Mapped['ClassRegion'] = so.relationship(foreign_keys=[class_region_id])
-    class_group: so.Mapped['ClassGroupIndex'] = so.relationship(foreign_keys=[class_group_id])
+    class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])
 
 class UserStatus(db.Model):
     """UserStatus lookup table."""
@@ -140,15 +145,15 @@ class UserStatus(db.Model):
 class StudentGroup(BaseModel):
     """StudentGroup model."""
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    student_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
-    class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group_index.id'), nullable=False)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group.id'), nullable=False)
     index_no: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
     status_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user_status.id'), nullable=False)
 
-    student: so.Mapped['User'] = so.relationship(foreign_keys=[student_id])
-    class_group: so.Mapped['ClassGroupIndex'] = so.relationship(foreign_keys=[class_group_id])
+    user: so.Mapped['User'] = so.relationship(foreign_keys=[user_id])
+    class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])
     status: so.Mapped['UserStatus'] = so.relationship(foreign_keys=[status_id])
-    __table_args__ = (sa.UniqueConstraint('student_id', 'class_group_id'),)
+    __table_args__ = (sa.UniqueConstraint('user_id', 'class_group_id'),)
 
 class ClassBatchTeacher(BaseModel):
     """ClassBatchTeacher model."""
@@ -173,13 +178,13 @@ class UserRole(BaseModel):
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), index=True, nullable=False)
     class_region_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_region.id'), nullable=True)
     class_batch_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_batch.id'), nullable=True)
-    class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group_index.id'), nullable=True)
+    class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group.id'), nullable=True)
 
     role: so.Mapped['Role'] = so.relationship(foreign_keys=[role_id])
     user: so.Mapped['User'] = so.relationship(foreign_keys=[user_id])
     class_region: so.Mapped['ClassRegion'] = so.relationship(foreign_keys=[class_region_id])
     class_batch: so.Mapped['ClassBatch'] = so.relationship(foreign_keys=[class_batch_id])
-    class_group: so.Mapped['ClassGroupIndex'] = so.relationship(foreign_keys=[class_group_id])
+    class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])
 
 class Message(BaseModel):
     """Message model."""

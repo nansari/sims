@@ -15,7 +15,7 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 
 import sqlalchemy as sa
 from app import db
-from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroupIndex, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, Countries
+from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, Countries
 
 from .config import Config
 
@@ -70,27 +70,39 @@ class UserRegForm(FlaskForm):
     including personal details, contact information, and batch selection.
     The batch choices are dynamically populated from the ClassBatch model.
     """
-    batch           = SelectField('Select Batch', coerce=int)
-    email           = EmailField('Email', validators=[DataRequired()])
+    # batch 
+    classname           = SelectField('Select Class', coerce=int) # GLB, HYD
+    classbatch           = SelectField('Select Batch', coerce=int) # B01
+    # personal details
     username        = TelField('Name', validators=[DataRequired()])
-    visa_type       = TelField('Visa Type', validators=[])
-    gender          = SelectField('Gender', choices=['M', 'F'], validators=[])
-    yob             = IntegerField('Year of Birth', validators=[InputRequired(), NumberRange(min=thisyear - 80, max=thisyear - 10, message="Birthday is not in range or invalid.")])
     mobile          = IntegerField('Mobile with country code', validators=[DataRequired()])
     whatsapp        = IntegerField('WhatsApp with country code', validators=[DataRequired()])
-    hometowncity    = TelField('Hometown City', validators=[DataRequired()])
-    hometowndistrict = TelField('Hometown District', validators=[DataRequired()])
-    hometownstate   = TelField('Hometown State', validators=[DataRequired()])
+    # visa_type       = TelField('Visa Type', validators=[])
+    gender          = SelectField('Gender', choices=['M', 'F'], validators=[])
+    # HOMETOWN DETAILS
     hometowncountry = SelectField('Hometown Country', coerce=int, validators=[DataRequired()])
-    residencecity   = TelField('Current Residence City', validators=[DataRequired()])
-    residencestate  = TelField('Current Residence State', validators=[DataRequired()])
+    hometownstate   = TelField('Hometown State', validators=[DataRequired()])
+    hometowndistrict = TelField('Hometown District', validators=[DataRequired()])
+    hometowncity    = TelField('Hometown City', validators=[DataRequired()])
+    hometownzip     = TelField('Hometown Pin/Zip', validators=[])
+    # RESIDENCE DETAILS
     residentcountry = SelectField('Current Residence Country', coerce=int, validators=[DataRequired()])
+    residencestate  = TelField('Current Residence State', validators=[DataRequired()])
+    residencecity   = TelField('Current Residence City', validators=[DataRequired()])
+    residencearea   = TelField('Area in Residence City', validators=[DataRequired()])
     residentzip     = TelField('Current Residence Pin/Zip', validators=[])
+    # OTHER DETAILS
+    yob             = IntegerField('Year of Birth', validators=[InputRequired(), NumberRange(min=thisyear - 80, max=thisyear - 10, message="Birthday is not in range or invalid.")])
     education       = TelField('Highest Education', validators=[DataRequired()])
     profession      = TelField('Profession', validators=[DataRequired()])
-    referrer_id     = IntegerField('Referred By ID', validators=[], default=0)
-    status          = SelectField('Status', coerce=int, validators=[])
+    email           = EmailField('Email', validators=[DataRequired()])
+    # referral and status
+    referrer_name   = TelField('Referred By Name', validators=[])
+    referrer_mobile = IntegerField('Referred By Mobile', validators=[], default=0)
     bio             = TextAreaField('Notes', validators=[], render_kw={"rows": 2, "cols": 80})    
+    # referrer_id     = IntegerField('Referred By ID', validators=[], default=0)
+    # Additional fields and submit
+    status          = SelectField('Status', coerce=int, validators=[], default=1) # Registration
     register        = SubmitField('Register')
 
     def __init__(self, *args, **kwargs):
@@ -100,7 +112,8 @@ class UserRegForm(FlaskForm):
         It populates the 'batch' dropdown with all available class batches.
         """
         super(UserRegForm, self).__init__(*args, **kwargs)
-        self.batch.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
+        self.classname.choices = [(c.id, c.name) for c in ClassName.query.all()]
+        self.classbatch.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
         self.hometowncountry.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
         self.residentcountry.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
         self.status.choices = [(s.id, s.status) for s in UserStatus.query.all()]
@@ -179,8 +192,9 @@ class ClassRegionForm(FlaskForm):
         self.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
         self.class_batch_id.choices = []
 
-class ClassGroupIndexForm(FlaskForm):
-    """ClassGroupIndex Form"""
+class ClassGroupForm(FlaskForm):
+    """ClassGroup Form"""
+    name = StringField('Name', validators=[DataRequired(), Length(max=64)])
     class_name_id = SelectField('Class Name', coerce=int, validators=[DataRequired()])
     class_batch_id = SelectField('Class Batch', coerce=int, validators=[DataRequired()])
     class_region_id = SelectField('Class Region', coerce=int, validators=[DataRequired()])
@@ -191,7 +205,7 @@ class ClassGroupIndexForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         """Initialize the form"""
-        super(ClassGroupIndexForm, self).__init__(*args, **kwargs)
+        super(ClassGroupForm, self).__init__(*args, **kwargs)
         self.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
         self.class_batch_id.choices = []
         self.class_region_id.choices = []
@@ -212,7 +226,7 @@ class ClassGroupMentorForm(FlaskForm):
         self.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
         self.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
         self.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.all()]
-        self.class_group_id.choices = [(g.id, g.description) for g in ClassGroupIndex.query.all()]
+        self.class_group_id.choices = [(g.id, g.description) for g in ClassGroup.query.all()]
 
 class UserStatusForm(FlaskForm):
     """UserStatus Form"""
@@ -222,7 +236,7 @@ class UserStatusForm(FlaskForm):
 
 class StudentGroupForm(FlaskForm):
     """StudentGroup Form"""
-    student_id = SelectField('Student', coerce=int, validators=[DataRequired()])
+    user_id = SelectField('Student', coerce=int, validators=[DataRequired()])
     class_group_id = SelectField('Class Group', coerce=int, validators=[DataRequired()])
     index_no = IntegerField('Index No', validators=[Optional()])
     status_id = SelectField('Status', coerce=int, validators=[DataRequired()])
@@ -231,8 +245,8 @@ class StudentGroupForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         """Initialize the form"""
         super(StudentGroupForm, self).__init__(*args, **kwargs)
-        self.student_id.choices = [(u.id, u.username) for u in User.query.all()]
-        self.class_group_id.choices = [(g.id, g.description) for g in ClassGroupIndex.query.all()]
+        self.user_id.choices = [(u.id, u.username) for u in User.query.all()]
+        self.class_group_id.choices = [(g.id, g.description) for g in ClassGroup.query.all()]
         self.status_id.choices = [(s.id, s.status) for s in UserStatus.query.all()]
 
 class ClassBatchTeacherForm(FlaskForm):
@@ -272,7 +286,7 @@ class UserRoleForm(FlaskForm):
         self.class_name_id.choices = [(c.id, c.name) for c in ClassName.query.all()]
         self.class_batch_id.choices = []
         self.class_region_id.choices = [(None, 'All Regions')]
-        self.class_group_id.choices = [(g.id, g.description) for g in ClassGroupIndex.query.all()]
+        self.class_group_id.choices = [(g.id, g.description) for g in ClassGroup.query.all()]
 
 class ClassBatchStatusForm(FlaskForm):
     """ClassBatchStatus Form"""
