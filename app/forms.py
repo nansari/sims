@@ -15,7 +15,7 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 
 import sqlalchemy as sa
 from app import db
-from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, Countries
+from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, Countries, UserStatusLookup, Contact
 
 from .config import Config
 
@@ -23,7 +23,7 @@ thisyear = datetime.datetime.now().year
 
 class LoginForm(FlaskForm):
     """Login Form"""
-    email = StringField('email', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     register = SubmitField('Sign In')
@@ -32,7 +32,7 @@ class PasswordForm(FlaskForm):
     """ Password Form """
     user_id = IntegerField('User ID', validators=[])
     name = StringField('Name', validators=[])
-    email = StringField('Email', validators=[])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), EqualTo('confirm_password', message='Passwords must match')])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired()])
     submit = SubmitField('Submit')
@@ -77,8 +77,9 @@ class UserRegForm(FlaskForm):
     username        = TelField('Name', validators=[DataRequired()])
     mobile          = IntegerField('Mobile with country code', validators=[DataRequired()])
     whatsapp        = IntegerField('WhatsApp with country code', validators=[DataRequired()])
-    # visa_type       = TelField('Visa Type', validators=[])
-    gender          = SelectField('Gender', choices=['M', 'F'], validators=[])
+    
+    email           = EmailField('Email', validators=[DataRequired(), Email()])
+    gender          = SelectField('Gender', choices=Config.GENDERS, validators=[])
     # HOMETOWN DETAILS
     hometowncountry = SelectField('Hometown Country', coerce=int, validators=[DataRequired()])
     hometownstate   = TelField('Hometown State', validators=[DataRequired()])
@@ -95,7 +96,6 @@ class UserRegForm(FlaskForm):
     yob             = IntegerField('Year of Birth', validators=[InputRequired(), NumberRange(min=thisyear - 80, max=thisyear - 10, message="Birthday is not in range or invalid.")])
     education       = TelField('Highest Education', validators=[DataRequired()])
     profession      = TelField('Profession', validators=[DataRequired()])
-    email           = EmailField('Email', validators=[DataRequired()])
     # referral and status
     referrer_name   = TelField('Referred By Name', validators=[])
     referrer_mobile = IntegerField('Referred By Mobile', validators=[], default=0)
@@ -116,7 +116,7 @@ class UserRegForm(FlaskForm):
         self.classbatch.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
         self.hometowncountry.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
         self.residentcountry.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
-        self.status.choices = [(s.id, s.status) for s in UserStatus.query.all()]
+        self.status.choices = [(s.id, s.status) for s in UserStatusLookup.query.all()]
 
     def validate_username(self, username):
         """Validate username"""
@@ -125,12 +125,7 @@ class UserRegForm(FlaskForm):
         if user is not None:
             raise ValidationError('Please use a different username.')
 
-    def validate_email(self, email):
-        """Validate email"""
-        user = db.session.scalar(sa.select(User).where(
-            User.email == email.data))
-        if user is not None:
-            raise ValidationError('Please use a different email address.')
+    
 
 class LocationForm(FlaskForm):
     """A form for selecting a location by country, state, and city.
@@ -247,7 +242,7 @@ class StudentGroupForm(FlaskForm):
         super(StudentGroupForm, self).__init__(*args, **kwargs)
         self.user_id.choices = [(u.id, u.username) for u in User.query.all()]
         self.class_group_id.choices = [(g.id, g.description) for g in ClassGroup.query.all()]
-        self.status_id.choices = [(s.id, s.status) for s in UserStatus.query.all()]
+        self.status_id.choices = [(s.id, s.status) for s in UserStatusLookup.query.all()]
 
 class ClassBatchTeacherForm(FlaskForm):
     """ClassBatchTeacher Form"""

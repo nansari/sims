@@ -7,14 +7,20 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from .config import Config
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = Config.SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-login = LoginManager(app)
-login.login_view = 'login'
+db = SQLAlchemy()
+migrate = Migrate()
+login = LoginManager()
 
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-# these should be after app is created
-from app import routes, models
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login.init_app(app)
+    login.login_view = 'login'
+
+    with app.app_context():
+        from app import routes, models
+
+    return app

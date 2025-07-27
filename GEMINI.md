@@ -45,4 +45,3 @@ Never run application after making changes to code as I am running the flask in 
 
 # IMPORTANT
 - Keep security on priority to secure the web app from hackers
-

@@ -1,3 +1,5 @@
+Implement following tasks.
+
 # IMPLEMENTATION PART-1: Add Classes in './app/models.py'
 
 All classes must inherit from the `BaseModel` class. Update `forms.py`, `routes.py`, and relevant templates as needed.
@@ -138,7 +140,7 @@ All classes must inherit from the `BaseModel` class. Update `forms.py`, `routes.
 
 # IMPLEMENTATION PART-3: Update Login Method
 
-- Update forms and templates to use `Contact.email` instead of `User.email`
+- Update forms, routes and templates to use `Contact.email` instead of `User.email`
 
 ---
 

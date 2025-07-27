@@ -9,14 +9,13 @@ for fetching data dynamically.
 """
 import json
 from urllib.parse import urlsplit
-from flask import render_template, flash, redirect, url_for, request, send_file
-from flask import jsonify
+from flask import render_template, flash, redirect, url_for, request, send_file, jsonify, current_app
 from io import BytesIO
 from flask_login import login_user, logout_user, current_user, login_required
 import sqlalchemy as sa
-from app import app, db
+from app import db
 from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm
-from app.models import ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, UserStatus, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus
+from app.models import ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, UserStatusLookup, RegStatusLookup
 # from app.forms import LoginForm, RegistrationForm
 # from app.models import User
 import app.forms as fo
@@ -25,9 +24,9 @@ from . import forms
 # from flask_debugtoolbar import DebugToolbarExtension
 from functions.parse_wa_text import parse_wa_text_fn
 
-# @app.route('/home')
-@app.route('/')
-@app.route('/index')
+# @current_app.route('/home')
+@current_app.route('/')
+@current_app.route('/index')
 @login_required
 def index():
     """Renders the home page."""
@@ -45,7 +44,7 @@ def index():
     return render_template('index.html', title='Home', posts=posts)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@current_app.route('/login', methods=['GET', 'POST'])
 def login():
     """Renders the login page."""
     if current_user.is_authenticated:
@@ -53,7 +52,7 @@ def login():
     form = fo.LoginForm()
     if form.validate_on_submit():
         user = db.session.scalar(
-            sa.select(mo.User).where(mo.User.email == form.email.data))
+            sa.select(mo.User).join(mo.Contact).where(mo.Contact.email == form.email.data))
         if user is None or not user.check_password(form.password.data):
             flash('Invalid email or password', 'danger')
             # flash('Invalid email or password')
@@ -65,14 +64,14 @@ def login():
         return redirect(next_page)
     return render_template('login.html', title='Sign In', form=form)
 
-@app.route('/logout')
+@current_app.route('/logout')
 def logout():
     """Renders the logout page"""
     logout_user()
     return redirect(url_for('index'))
 
 
-@app.route('/reg_template', methods=['GET', 'POST'])
+@current_app.route('/reg_template', methods=['GET', 'POST'])
 def reg_template():
     """Renders the reg_template page"""
     # selected_batch = redirect(url_for('select_a_batch'))
@@ -87,7 +86,7 @@ def reg_template():
     return render_template('select_batch.html', form=form)
 
 
-@app.route('/select_a_batch', methods=['GET', 'POST'])
+@current_app.route('/select_a_batch', methods=['GET', 'POST'])
 @login_required
 def select_a_batch():
     """Renders the select_a_batch page"""
@@ -112,7 +111,7 @@ def select_a_batch():
         # form = forms.UserRegForm(data=d)
         # return render_template('user_reg.html', form=form)
 
-@app.route('/reg_from_wa_text', methods=['GET', 'POST'])
+@current_app.route('/reg_from_wa_text', methods=['GET', 'POST'])
 def reg_from_wa_text():
     """Render the reg_from_wa_text page to accept WhatsApp text."""
     form = forms.RegFromWaText()
@@ -151,7 +150,7 @@ def reg_from_wa_text():
     return render_template('reg_from_wa_text.html', form=form)
 
 
-@app.route('/support', methods=['GET', 'POST'])
+@current_app.route('/support', methods=['GET', 'POST'])
 def support():
     """Renders the support page."""
     if request.method == 'POST':
@@ -173,26 +172,31 @@ def support():
             flash('Please complete the reCAPTCHA.')
     return render_template('support.html')
 
-@app.route('/user_reg', methods=['GET', 'POST'])
+@current_app.route('/user_reg', methods=['GET', 'POST'])
 @login_required
 def user_reg():
     """Renders the user_reg page"""
     form = forms.UserRegForm()
     a_form_submitted = False
     if form.validate_on_submit(): # True only for POST Methos
-        user = mo.User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
+        user = mo.User(username=form.username.data, bithdate=form.yob.data, gender=form.gender.data)
+        user.password = mo.Password(password_hash=generate_password_hash(form.password.data))
+        contact = mo.Contact(email=form.email.data, mobile=form.mobile.data, whatsapp=form.whatsapp.data)
+        user.contact = contact
+        home_address = mo.HomeAddress(country_id=form.hometowncountry.data, state_id=form.hometownstate.data, city_id=form.hometowncity.data, area=form.hometowndistrict.data, zip=form.hometownzip.data)
+        user.home_address = home_address
+        resident_address = mo.ResidentAddress(country_id=form.residentcountry.data, state_id=form.residencestate.data, city_id=form.residencecity.data, area=form.residencearea.data, zip=form.residentzip.data)
+        user.resident_address = resident_address
+        other_detail = mo.OtherDetail(education=form.education.data, profession=form.profession.data)
+        user.other_details = other_detail
         db.session.add(user)
         db.session.commit()
         flash('Congratulations, the user is registered!')
-        # request.args is ImmutableMultiDict([]) 
-        # request.form is :ImmutableMultiDict([('csrf_token', 'ac'), ('batch', 'KARAMA-08'), ('email', 'adsfa@sdfsd.com'), ('name', 'asdf'), ('gender', 'M'), ('yob', '1980'), ('mobile', '987979879'), ('hometowncity', '987979879'), ('hometowncity', '987979879'), ('hometowndistrict', 'sdf'), ('hometownstate', 'sdf'), ('hometowncountry', 'sdf'), ('residencecity', 'sdf'), ('residencestate', 'asdf'), ('residentcountry', 'sdf'), ('residentzip', '2343'), ('education', 'sdf'), ('profession', 'asdf'), ('referrer_id', '344'), ('status', 'CallOut'), ('bio', 'wqerwe'), ('submit', 'Submit')])
-        # flash("User is registered with data request.args {} request.form:{}".format( request.args, request.form))
         a_form_submitted = True    
     return render_template('user_reg.html', a_form_submitted=a_form_submitted, form=form)
 
 
-@app.route('/password', methods=['GET', 'POST'])
+@current_app.route('/password', methods=['GET', 'POST'])
 @login_required
 def password():
     """Renders the password page."""
@@ -204,7 +208,7 @@ def password():
         elif form.name.data:
             user = db.session.scalar(sa.select(mo.User).where(mo.User.username.like(f'%{form.name.data}%')))
         elif form.email.data:
-            user = db.session.scalar(sa.select(mo.User).where(mo.User.email.like(f'%{form.email.data}%')))
+            user = db.session.scalar(sa.select(mo.User).join(mo.Contact).where(mo.Contact.email == form.email.data))
 
         if user:
             password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
@@ -221,7 +225,7 @@ def password():
             flash('User not found.')
     return render_template('password.html', title='Password', form=form)
 
-@app.route('/location', methods=['GET', 'POST'])
+@current_app.route('/location', methods=['GET', 'POST'])
 @login_required
 def location():
     """Renders the location page, which allows users to search for locations.
@@ -232,7 +236,7 @@ def location():
     form = fo.LocationForm()
     return render_template('location.html', title='Location', form=form)
 
-@app.route('/api/states/<country_name>')
+@current_app.route('/api/states/<country_name>')
 @login_required
 def api_states(country_name):
     """Provides a list of states for a given country.
@@ -249,7 +253,7 @@ def api_states(country_name):
         return jsonify([{'id': state.id, 'name': state.name} for state in states])
     return jsonify([])
 
-@app.route('/api/cities/<country_name>/<int:state_id>')
+@current_app.route('/api/cities/<country_name>/<int:state_id>')
 @login_required
 def api_cities(country_name, state_id):
     """Provides a list of cities for a given country and state.
@@ -267,7 +271,7 @@ def api_cities(country_name, state_id):
         return jsonify([{'id': city.id, 'name': city.name} for city in cities])
     return jsonify([])
 
-@app.route('/api/location/<int:city_id>')
+@current_app.route('/api/location/<int:city_id>')
 @login_required
 def api_location(city_id):
     """Provides location data for a given city.
@@ -301,7 +305,7 @@ def api_location(city_id):
         }])
     return jsonify([])
 
-@app.route('/api/class_batches/<int:class_name_id>')
+@current_app.route('/api/class_batches/<int:class_name_id>')
 @login_required
 def api_class_batches(class_name_id):
     """
@@ -317,14 +321,14 @@ def api_class_batches(class_name_id):
     batches = db.session.scalars(sa.select(ClassBatch).where(ClassBatch.class_name_id == class_name_id)).all()
     return jsonify([{'id': batch.id, 'name': batch.batch_no} for batch in batches])
 
-@app.route('/api/class_regions/<int:class_batch_id>')
+@current_app.route('/api/class_regions/<int:class_batch_id>')
 @login_required
 def api_class_regions(class_batch_id):
     """Provides a list of class regions for a given class batch."""
     regions = db.session.scalars(sa.select(ClassRegion).where(ClassRegion.class_batch_id == class_batch_id)).all()
     return jsonify([{'id': region.id, 'name': region.section} for region in regions])
 
-@app.route('/dashboard')
+@current_app.route('/dashboard')
 @login_required
 def dashboard():
     """Renders the dashboard page."""
@@ -355,7 +359,7 @@ def dashboard():
                            num_batches=num_batches,
                            chart_data=chart_data)
 
-@app.route('/calendar')
+@current_app.route('/calendar')
 @login_required
 def calendar():
     """Renders the calendar page."""
@@ -368,7 +372,7 @@ def calendar():
         })
     return render_template('calendar.html', title='Calendar', events=events)
 
-@app.route('/messages')
+@current_app.route('/messages')
 @login_required
 def messages():
     """Renders the messages page."""
@@ -377,7 +381,7 @@ def messages():
     ).order_by(mo.Message.timestamp.desc()).all()
     return render_template('messages.html', title='Messages', messages=messages)
 
-@app.route('/send_message', methods=['GET', 'POST'])
+@current_app.route('/send_message', methods=['GET', 'POST'])
 @login_required
 def send_message():
     """Renders the send_message page."""
@@ -394,14 +398,14 @@ def send_message():
             flash('User not found.')
     return render_template('send_message.html', title='Send Message', form=form)
 
-@app.route('/files')
+@current_app.route('/files')
 @login_required
 def files():
     """Renders the files page."""
     files = db.session.query(mo.File).filter(mo.File.user_id == current_user.id).all()
     return render_template('files.html', title='Files', files=files)
 
-@app.route('/upload_file', methods=['GET', 'POST'])
+@current_app.route('/upload_file', methods=['GET', 'POST'])
 @login_required
 def upload_file():
     """Renders the upload_file page."""
@@ -415,7 +419,7 @@ def upload_file():
         return redirect(url_for('files'))
     return render_template('upload_file.html', title='Upload File', form=form)
 
-@app.route('/download_file/<int:file_id>')
+@current_app.route('/download_file/<int:file_id>')
 @login_required
 def download_file(file_id):
     """Downloads a file."""
@@ -427,7 +431,7 @@ def download_file(file_id):
         return redirect(url_for('files'))
 
 
-@app.route('/class_name', methods=['GET', 'POST'])
+@current_app.route('/class_name', methods=['GET', 'POST'])
 @login_required
 def class_name():
     form = ClassNameForm()
@@ -447,7 +451,7 @@ def class_name():
     classes = query.all()
     return render_template('class_name.html', title='Class Name', form=form, classes=classes)
 
-@app.route('/class_batch', methods=['GET', 'POST'])
+@current_app.route('/class_batch', methods=['GET', 'POST'])
 @login_required
 def class_batch():
     form = ClassBatchForm()
@@ -464,7 +468,7 @@ def class_batch():
     batches = query.all()
     return render_template('class_batch.html', title='Class Batch', form=form, batches=batches)
 
-@app.route('/class_region', methods=['GET', 'POST'])
+@current_app.route('/class_region', methods=['GET', 'POST'])
 @login_required
 def class_region():
     """
@@ -494,7 +498,7 @@ def class_region():
     regions = query.all()
     return render_template('class_region.html', title='Class Region', form=form, regions=regions)
 
-@app.route('/class_group', methods=['GET', 'POST'])
+@current_app.route('/class_group', methods=['GET', 'POST'])
 @login_required
 def class_group():
     form = ClassGroupForm()
@@ -519,7 +523,7 @@ def class_group():
     indexes = query.all()
     return render_template('class_group.html', title='Class Group Index', form=form, indexes=indexes)
 
-@app.route('/class_group_mentor', methods=['GET', 'POST'])
+@current_app.route('/class_group_mentor', methods=['GET', 'POST'])
 @login_required
 def class_group_mentor():
     form = ClassGroupMentorForm()
@@ -532,7 +536,7 @@ def class_group_mentor():
     mentors = ClassGroupMentor.query.all()
     return render_template('class_group_mentor.html', title='Class Group Mentor', form=form, mentors=mentors)
 
-@app.route('/list_class_group_mentors')
+@current_app.route('/list_class_group_mentors')
 @login_required
 def list_class_group_mentors():
     """Renders the list_class_group_mentors page."""
@@ -540,7 +544,7 @@ def list_class_group_mentors():
     return render_template('list_class_group_mentors.html', title='List Class Group Mentors', mentors=mentors)
 
 
-@app.route('/remove_class_group_mentor', methods=['GET', 'POST'])
+@current_app.route('/remove_class_group_mentor', methods=['GET', 'POST'])
 @login_required
 def remove_class_group_mentor():
     """Renders the remove_class_group_mentor page."""
@@ -558,7 +562,7 @@ def remove_class_group_mentor():
     return render_template('remove_class_group_mentor.html', title='Remove Class Group Mentor', mentors=mentors)
 
 
-@app.route('/update_class_group_mentor', methods=['GET'])
+@current_app.route('/update_class_group_mentor', methods=['GET'])
 @login_required
 def update_class_group_mentor():
     """Renders the update_class_group_mentor page."""
@@ -566,7 +570,7 @@ def update_class_group_mentor():
     return render_template('update_class_group_mentor.html', title='Update Class Group Mentor', mentors=mentors)
 
 
-@app.route('/update_class_group_mentor/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_class_group_mentor/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_class_group_mentor_item(id):
     """Renders the update_class_group_mentor_item page."""
@@ -585,7 +589,7 @@ def update_class_group_mentor_item(id):
     return render_template('update_class_group_mentor_item.html', title='Update Class Group Mentor', form=form, mentor=mentor)
 
 
-@app.route('/search_class_group_mentor', methods=['GET', 'POST'])
+@current_app.route('/search_class_group_mentor', methods=['GET', 'POST'])
 @login_required
 def search_class_group_mentor():
     """Renders the search_class_group_mentor page."""
@@ -608,28 +612,28 @@ def search_class_group_mentor():
             flash('Please enter a search term.', 'warning')
     return render_template('search_class_group_mentor.html', title='Search Class Group Mentor', form=form, mentors=mentors)
 
-@app.route('/user_status', methods=['GET', 'POST'])
+@current_app.route('/user_status', methods=['GET', 'POST'])
 @login_required
 def user_status():
     form = UserStatusForm()
     if form.validate_on_submit():
-        user_status = UserStatus(status=form.status.data, description=form.description.data)
+        user_status = UserStatusLookup(status=form.status.data, description=form.description.data)
         db.session.add(user_status)
         db.session.commit()
         flash('User status added successfully!')
         return redirect(url_for('user_status'))
-    statuses = UserStatus.query.all()
+    statuses = UserStatusLookup.query.all()
     return render_template('user_status.html', title='User Status', form=form, statuses=statuses)
 
-@app.route('/list_user_statuses')
+@current_app.route('/list_user_statuses')
 @login_required
 def list_user_statuses():
     """Renders the list_user_statuses page."""
-    statuses = UserStatus.query.all()
+    statuses = UserStatusLookup.query.all()
     return render_template('list_user_statuses.html', title='List User Statuses', statuses=statuses)
 
 
-@app.route('/remove_user_status', methods=['GET', 'POST'])
+@current_app.route('/remove_user_status', methods=['GET', 'POST'])
 @login_required
 def remove_user_status():
     """Renders the remove_user_status page."""
@@ -647,7 +651,7 @@ def remove_user_status():
     return render_template('remove_user_status.html', title='Remove User Status', statuses=statuses)
 
 
-@app.route('/update_user_status', methods=['GET'])
+@current_app.route('/update_user_status', methods=['GET'])
 @login_required
 def update_user_status():
     """Renders the update_user_status page."""
@@ -655,7 +659,7 @@ def update_user_status():
     return render_template('update_user_status.html', title='Update User Status', statuses=statuses)
 
 
-@app.route('/update_user_status/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_user_status/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_user_status_item(id):
     """Renders the update_user_status_item page."""
@@ -670,7 +674,7 @@ def update_user_status_item(id):
     return render_template('update_user_status_item.html', title='Update User Status', form=form, status=status)
 
 
-@app.route('/search_user_status', methods=['GET', 'POST'])
+@current_app.route('/search_user_status', methods=['GET', 'POST'])
 @login_required
 def search_user_status():
     """Renders the search_user_status page."""
@@ -690,7 +694,7 @@ def search_user_status():
             flash('Please enter a search term.', 'warning')
     return render_template('search_user_status.html', title='Search User Status', form=form, statuses=statuses)
 
-@app.route('/student_group', methods=['GET', 'POST'])
+@current_app.route('/student_group', methods=['GET', 'POST'])
 @login_required
 def student_group():
     form = StudentGroupForm()
@@ -703,7 +707,7 @@ def student_group():
     groups = StudentGroup.query.all()
     return render_template('student_group.html', title='Student Group', form=form, groups=groups)
 
-@app.route('/class_batch_teacher', methods=['GET', 'POST'])
+@current_app.route('/class_batch_teacher', methods=['GET', 'POST'])
 @login_required
 def class_batch_teacher():
     form = ClassBatchTeacherForm()
@@ -716,7 +720,7 @@ def class_batch_teacher():
     teachers = ClassBatchTeacher.query.all()
     return render_template('class_batch_teacher.html', title='Class Batch Teacher', form=form, teachers=teachers)
 
-@app.route('/role', methods=['GET', 'POST'])
+@current_app.route('/role', methods=['GET', 'POST'])
 @login_required
 def role():
     form = RoleForm()
@@ -729,7 +733,7 @@ def role():
     roles = Role.query.order_by(Role.level).all()
     return render_template('role.html', title='Role', form=form, roles=roles)
 
-@app.route('/remove_role', methods=['GET', 'POST'])
+@current_app.route('/remove_role', methods=['GET', 'POST'])
 @login_required
 def remove_role():
     if request.method == 'POST':
@@ -745,13 +749,13 @@ def remove_role():
     roles = Role.query.order_by(Role.level).all()
     return render_template('remove_role.html', title='Remove Role', roles=roles)
 
-@app.route('/update_role', methods=['GET'])
+@current_app.route('/update_role', methods=['GET'])
 @login_required
 def update_role():
     roles = Role.query.order_by(Role.level).all()
     return render_template('update_role.html', title='Update Role', roles=roles)
 
-@app.route('/update_role/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_role/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_role_item(id):
     role = Role.query.get_or_404(id)
@@ -765,7 +769,7 @@ def update_role_item(id):
         return redirect(url_for('update_role'))
     return render_template('update_role_item.html', title='Update Role', form=form, role=role)
 
-@app.route('/list_roles')
+@current_app.route('/list_roles')
 @login_required
 def list_roles():
     """Renders the list_roles page."""
@@ -773,7 +777,7 @@ def list_roles():
     return render_template('list_roles.html', title='List Roles', roles=roles)
 
 
-@app.route('/remove_user_role', methods=['GET', 'POST'])
+@current_app.route('/remove_user_role', methods=['GET', 'POST'])
 @login_required
 def remove_user_role():
     form = fo.EmptyForm()
@@ -791,7 +795,7 @@ def remove_user_role():
     return render_template('remove_user_role.html', title='Remove User Role', user_roles=user_roles, form=form)
 
 
-@app.route('/update_user_role', methods=['GET'])
+@current_app.route('/update_user_role', methods=['GET'])
 @login_required
 def update_user_role():
     query = UserRole.query
@@ -809,7 +813,7 @@ def update_user_role():
     return render_template('update_user_role.html', title='Update User Role', user_roles=user_roles)
 
 
-@app.route('/update_user_role/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_user_role/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_user_role_item(id):
     user_role = UserRole.query.get_or_404(id)
@@ -873,7 +877,7 @@ def update_user_role_item(id):
     return render_template('update_user_role_item.html', title='Update User Role', form=form, user_role=user_role)
 
 
-@app.route('/list_user_roles')
+@current_app.route('/list_user_roles')
 @login_required
 def list_user_roles():
     query = UserRole.query
@@ -891,7 +895,7 @@ def list_user_roles():
     return render_template('list_user_roles.html', title='List User Roles', user_roles=user_roles)
 
 
-@app.route('/user_role', methods=['GET', 'POST'])
+@current_app.route('/user_role', methods=['GET', 'POST'])
 @login_required
 def user_role():
     form = UserRoleForm()
@@ -928,7 +932,7 @@ def user_role():
     user_roles = UserRole.query.all()
     return render_template('user_role.html', title='User Role', form=form, user_roles=user_roles)
 
-@app.route('/user/<username>')
+@current_app.route('/user/<username>')
 @login_required
 def user_profile(username):
     """Renders the user profile page."""
@@ -942,7 +946,7 @@ def user_profile(username):
     return render_template('user_profile.html', title='User Profile', user=user, student_groups=student_groups)
 
 
-@app.route('/class_batch_status', methods=['GET', 'POST'])
+@current_app.route('/class_batch_status', methods=['GET', 'POST'])
 @login_required
 def class_batch_status():
     form = ClassBatchStatusForm()
@@ -956,7 +960,7 @@ def class_batch_status():
     return render_template('class_batch_status.html', title='Class Batch Status', form=form, statuses=statuses)
 
 
-@app.route('/list_class_names')
+@current_app.route('/list_class_names')
 @login_required
 def list_class_names():
     """Renders the list_class_names page."""
@@ -964,7 +968,7 @@ def list_class_names():
     return render_template('list_class_names.html', title='List Class Names', class_names=class_names)
 
 
-@app.route('/search_class_name', methods=['GET', 'POST'])
+@current_app.route('/search_class_name', methods=['GET', 'POST'])
 @login_required
 def search_class_name():
     """Renders the search_class_name page."""
@@ -979,7 +983,7 @@ def search_class_name():
     return render_template('search_class_name.html', title='Search Class Name', form=form, class_names=class_names)
 
 
-@app.route('/remove_class_name', methods=['GET', 'POST'])
+@current_app.route('/remove_class_name', methods=['GET', 'POST'])
 @login_required
 def remove_class_name():
     """Renders the remove_class_name page."""
@@ -997,7 +1001,7 @@ def remove_class_name():
     return render_template('remove_class_name.html', title='Remove Class Name', class_names=class_names)
 
 
-@app.route('/update_class_name', methods=['GET'])
+@current_app.route('/update_class_name', methods=['GET'])
 @login_required
 def update_class_name():
     """Renders the update_class_name page."""
@@ -1005,7 +1009,7 @@ def update_class_name():
     return render_template('update_class_name.html', title='Update Class Name', class_names=class_names)
 
 
-@app.route('/update_class_name/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_class_name/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_class_name_item(id):
     """Renders the update_class_name_item page."""
@@ -1020,7 +1024,7 @@ def update_class_name_item(id):
     return render_template('update_class_name_item.html', title='Update Class Name', form=form, class_name=class_name)
 
 
-@app.route('/list_class_batch_statuses')
+@current_app.route('/list_class_batch_statuses')
 @login_required
 def list_class_batch_statuses():
     """Renders the list_class_batch_statuses page."""
@@ -1028,7 +1032,7 @@ def list_class_batch_statuses():
     return render_template('list_class_batch_statuses.html', title='List Class Batch Statuses', statuses=statuses)
 
 
-@app.route('/remove_class_batch_status', methods=['GET', 'POST'])
+@current_app.route('/remove_class_batch_status', methods=['GET', 'POST'])
 @login_required
 def remove_class_batch_status():
     """Renders the remove_class_batch_status page."""
@@ -1046,7 +1050,7 @@ def remove_class_batch_status():
     return render_template('remove_class_batch_status.html', title='Remove Class Batch Status', statuses=statuses)
 
 
-@app.route('/update_class_batch_status', methods=['GET'])
+@current_app.route('/update_class_batch_status', methods=['GET'])
 @login_required
 def update_class_batch_status():
     """Renders the update_class_batch_status page."""
@@ -1054,7 +1058,7 @@ def update_class_batch_status():
     return render_template('update_class_batch_status.html', title='Update Class Batch Status', statuses=statuses)
 
 
-@app.route('/update_class_batch_status/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_class_batch_status/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_class_batch_status_item(id):
     """Renders the update_class_batch_status_item page."""
@@ -1068,7 +1072,7 @@ def update_class_batch_status_item(id):
     return render_template('update_class_batch_status_item.html', title='Update Class Batch Status', form=form, status=status)
 
 
-@app.route('/list_class_batches')
+@current_app.route('/list_class_batches')
 @login_required
 def list_class_batches():
     """Renders the list_class_batches page."""
@@ -1076,7 +1080,7 @@ def list_class_batches():
     return render_template('list_class_batches.html', title='List Class Batches', batches=batches)
 
 
-@app.route('/remove_class_batch', methods=['GET', 'POST'])
+@current_app.route('/remove_class_batch', methods=['GET', 'POST'])
 @login_required
 def remove_class_batch():
     """Renders the remove_class_batch page."""
@@ -1094,7 +1098,7 @@ def remove_class_batch():
     return render_template('remove_class_batch.html', title='Remove Class Batch', batches=batches)
 
 
-@app.route('/update_class_batch', methods=['GET'])
+@current_app.route('/update_class_batch', methods=['GET'])
 @login_required
 def update_class_batch():
     """Renders the update_class_batch page."""
@@ -1102,7 +1106,7 @@ def update_class_batch():
     return render_template('update_class_batch.html', title='Update Class Batch', batches=batches)
 
 
-@app.route('/update_class_batch/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_class_batch/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_class_batch_item(id):
     """Renders the update_class_batch_item page."""
@@ -1120,7 +1124,7 @@ def update_class_batch_item(id):
     return render_template('update_class_batch_item.html', title='Update Class Batch', form=form, batch=batch)
 
 
-@app.route('/list_class_regions')
+@current_app.route('/list_class_regions')
 @login_required
 def list_class_regions():
     """Renders the list_class_regions page."""
@@ -1128,7 +1132,7 @@ def list_class_regions():
     return render_template('list_class_regions.html', title='List Class Regions', regions=regions)
 
 
-@app.route('/remove_class_region', methods=['GET', 'POST'])
+@current_app.route('/remove_class_region', methods=['GET', 'POST'])
 @login_required
 def remove_class_region():
     """Renders the remove_class_region page."""
@@ -1146,7 +1150,7 @@ def remove_class_region():
     return render_template('remove_class_region.html', title='Remove Class Region', regions=regions)
 
 
-@app.route('/update_class_region', methods=['GET'])
+@current_app.route('/update_class_region', methods=['GET'])
 @login_required
 def update_class_region():
     """Renders the update_class_region page."""
@@ -1154,7 +1158,7 @@ def update_class_region():
     return render_template('update_class_region.html', title='Update Class Region', regions=regions)
 
 
-@app.route('/update_class_region/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_class_region/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_class_region_item(id):
     """Renders the update_class_region_item page."""
@@ -1179,7 +1183,7 @@ def update_class_region_item(id):
     return render_template('update_class_region_item.html', title='Update Class Region', form=form, region=region)
 
 
-@app.route('/list_class_groups')
+@current_app.route('/list_class_groups')
 @login_required
 def list_class_groups():
     """Renders the list_class_groups page."""
@@ -1187,7 +1191,7 @@ def list_class_groups():
     return render_template('list_class_groups.html', title='List Class Group Indexes', indexes=indexes)
 
 
-@app.route('/remove_class_group', methods=['GET', 'POST'])
+@current_app.route('/remove_class_group', methods=['GET', 'POST'])
 @login_required
 def remove_class_group():
     """Renders the remove_class_group page."""
@@ -1205,7 +1209,7 @@ def remove_class_group():
     return render_template('remove_class_group.html', title='Remove Class Group Index', indexes=indexes)
 
 
-@app.route('/update_class_group', methods=['GET'])
+@current_app.route('/update_class_group', methods=['GET'])
 @login_required
 def update_class_group():
     """Renders the update_class_group page."""
@@ -1213,7 +1217,7 @@ def update_class_group():
     return render_template('update_class_group.html', title='Update Class Group Index', indexes=indexes)
 
 
-@app.route('/update_class_group/<int:id>', methods=['GET', 'POST'])
+@current_app.route('/update_class_group/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_class_group_item(id):
     """Renders the update_class_group_item page."""

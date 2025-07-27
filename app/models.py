@@ -1,4 +1,3 @@
-# app/models.py
 """
 This module defines the database models for the Flask application.
 
@@ -19,26 +18,55 @@ from datetime import datetime, timezone
 from flask_login import UserMixin
 from typing import Optional
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy_utils import EmailType
+from sqlalchemy import BigInteger
+
+# Import all models to ensure they are registered with SQLAlchemy
+
+
 
 @login.user_loader
 def load_user(user_id):
     """Load user."""
     return db.session.get(User, int(user_id))
 
+class BaseModel(db.Model):
+    """Base model for other models to inherit from."""
+    __abstract__ = True
+    created_by: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    created_at: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
+    updated_by: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
 class User(UserMixin, db.Model):
+    __table_args__ = {'extend_existing': True}
     """User model."""
     # UserMixin provides - is_authenticated, is_active, is_anonymous, get_id()
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True,
-                                             unique=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True,)
-                                            
-    password: so.Mapped['Password'] = so.relationship(back_populates='user', cascade='all, delete-orphan')
+    gender: so.Mapped[str] = so.mapped_column(sa.String(10), nullable=True)
+
+    password: so.Mapped['Password'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Password.user_id'])
+    contact: so.Mapped['Contact'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Contact.user_id'])
+    home_address: so.Mapped['HomeAddress'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['HomeAddress.user_id'])
+    resident_address: so.Mapped['ResidentAddress'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['ResidentAddress.user_id'])
+    other_details: so.Mapped['OtherDetail'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['OtherDetail.user_id'])
+    progress_record: so.Mapped[list['ProgressRecord']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['ProgressRecord.user_id'])
+    attendance: so.Mapped[list['UserAttendance']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserAttendance.user_id'])
+    user_temperament: so.Mapped[list['UserTemperament']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserTemperament.user_id'])
+    user_registration_status: so.Mapped[list['UserRegStatus']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserRegStatus.user_id'])
+    callout_time: so.Mapped['CallOutTime'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['CallOutTime.user_id'])
+    photo: so.Mapped['Photo'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Photo.user_id'])
+    test_session_score: so.Mapped[list['TestSessionScore']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['TestSessionScore.user_id'])
+    user_task: so.Mapped[list['UserTask']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserTask.user_id'])
+    user_skill: so.Mapped[list['UserSkill']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserSkill.user_id'])
+    user_dua: so.Mapped[list['UserDua']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserDua.user_id'])
+    aamal: so.Mapped['Aaamal'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Aaamal.user_id'])
+    gender: so.Mapped[str] = so.mapped_column(sa.String(10), nullable=True)
     bithdate: so.Mapped[int] = so.mapped_column(
         sa.Integer(),
         sa.CheckConstraint('bithdate BETWEEN 1950 and 2099'))
-    
-    
+
     @property
     def password_hash(self):
         """Prevent password from being accessed"""
@@ -55,40 +83,358 @@ class User(UserMixin, db.Model):
             return check_password_hash(self.password.password_hash, password)
         return False
 
-    def __repr__(self):
-        return '<User {}>'.format(self.username)
 
 class Password(db.Model):
     """Password model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     password_hash: so.Mapped[str] = so.mapped_column(sa.String(256))
     attempt_counts: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     is_allowed: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     last_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
     last_successful_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
-    
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), unique=True)
+
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True)
     user: so.Mapped['User'] = so.relationship(back_populates='password')
-class BaseModel(db.Model):
-    """Base model for other models to inherit from."""
-    __abstract__ = True
-    created_by: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
-    created_at: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
-    updated_by: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
-    updated_at: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+
+
+
+
+
+class Contact(BaseModel):
+    """Contact model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True, nullable=False)
+    mobile: so.Mapped[int] = so.mapped_column(sa.BigInteger, nullable=True)
+    whatsapp: so.Mapped[int] = so.mapped_column(sa.BigInteger, nullable=True)
+    
+
+    user: so.Mapped['User'] = so.relationship(back_populates='contact', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return '<Contact {}>'.format(self.email)
+
+class HomeAddress(BaseModel):
+    """HomeAddress model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True, nullable=False)
+    country_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('countries.id'), nullable=False)
+    state_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('states.id'), nullable=False)
+    city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('cities.id'), nullable=False)
+    area: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
+    zip: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='home_address', foreign_keys=[user_id])
+    country: so.Mapped['Countries'] = so.relationship(foreign_keys=[country_id])
+    state: so.Mapped['States'] = so.relationship(foreign_keys=[state_id])
+    city: so.Mapped['Cities'] = so.relationship(foreign_keys=[city_id])
+
+    def __repr__(self):
+        return '<HomeAddress UserID: {}>'.format(self.user_id)
+
+class ResidentAddress(BaseModel):
+    """ResidentAddress model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True, nullable=False)
+    country_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('countries.id'), nullable=False)
+    state_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('states.id'), nullable=False)
+    city_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('cities.id'), nullable=False)
+    area: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
+    zip: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='resident_address', foreign_keys=[user_id])
+    country: so.Mapped['Countries'] = so.relationship(foreign_keys=[country_id])
+    state: so.Mapped['States'] = so.relationship(foreign_keys=[state_id])
+    city: so.Mapped['Cities'] = so.relationship(foreign_keys=[city_id])
+
+    def __repr__(self):
+        return '<ResidentAddress UserID: {}>'.format(self.user_id)
+
+class OtherDetail(BaseModel):
+    """OtherDetail model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True, nullable=False)
+    education: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=False)
+    profession: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=False)
+    visa_status: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
+    citizenship: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
+    spouse: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    son: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    daughter: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='other_details', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return '<OtherDetail UserID: {}>'.format(self.user_id)
+
+class ProgressRecord(BaseModel):
+    """ProgressRecord model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    note: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='progress_record', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return '<ProgressRecord UserID: {}>'.format(self.user_id)
+
+class AttendanceStatusLookup(db.Model):
+    """AttendanceStatusLookup model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    status: so.Mapped[str] = so.mapped_column(sa.String(1), unique=True, nullable=False)
+
+    def __repr__(self):
+        return '<AttendanceStatusLookup {}>'.format(self.status)
+
+class ClassSession(BaseModel):
+    """ClassSession model."""
+    __table_args__ = (sa.UniqueConstraint('class_date', 'class_batch_id'), {'extend_existing': True})
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    class_date: so.Mapped[datetime] = so.mapped_column(sa.Date, nullable=False)
+    class_batch_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_batch.id'), nullable=False)
+    teacher_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+
+    class_batch: so.Mapped['ClassBatch'] = so.relationship()
+    teacher: so.Mapped['User'] = so.relationship(foreign_keys=[teacher_id])
+
+    def __repr__(self):
+        return f'<ClassSession Date: {self.class_date} Batch: {self.class_batch_id}>'
+
+class UserAttendance(BaseModel):
+    """UserAttendance model."""
+    __table_args__ = (sa.UniqueConstraint('user_id', 'class_session_id'), {'extend_existing': True})
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    class_session_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_session.id'), nullable=False)
+    attendance_status_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('attendance_status_lookup.id'), nullable=False)
+    note: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
+    late_by_min: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    left_early_by_min: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='attendance', foreign_keys=[user_id])
+    class_session: so.Mapped['ClassSession'] = so.relationship()
+    attendance_status: so.Mapped['AttendanceStatusLookup'] = so.relationship()
+
+    def __repr__(self):
+        return f'<UserAttendance UserID: {self.user_id} SessionID: {self.class_session_id}>'
+
+class TemperamentLookup(db.Model):
+    """TemperamentLookup model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    temperament: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
+
+    def __repr__(self):
+        return '<TemperamentLookup {}>'.format(self.temperament)
+
+class UserTemperament(BaseModel):
+    """UserTemperament model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    temperament_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('temperament_lookup.id'), nullable=False)
+    note: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='user_temperament', foreign_keys=[user_id])
+    temperament: so.Mapped['TemperamentLookup'] = so.relationship()
+
+    def __repr__(self):
+        return f'<UserTemperament UserID: {self.user_id} TemperamentID: {self.temperament_id}>'
+
+class RegStatusLookup(db.Model):
+    """RegStatusLookup model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    status: so.Mapped[str] = so.mapped_column(sa.String(16), unique=True, nullable=False)
+
+    def __repr__(self):
+        return '<RegStatusLookup {}>'.format(self.status)
+
+class UserRegStatus(BaseModel):
+    """UserRegStatus model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    status_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('reg_status_lookup.id'), nullable=False)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='user_registration_status', foreign_keys=[user_id])
+    status: so.Mapped['RegStatusLookup'] = so.relationship()
+
+    def __repr__(self):
+        return f'<UserRegStatus UserID: {self.user_id} StatusID: {self.status_id}>'
+
+class CallOutTime(BaseModel):
+    """CallOutTime model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    hours: so.Mapped[datetime] = so.mapped_column(sa.Time, nullable=False)
+    timezone: so.Mapped[str] = so.mapped_column(sa.String(16), nullable=False)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='callout_time', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return f'<CallOutTime UserID: {self.user_id} Hours: {self.hours}>'
+
+class Photo(BaseModel):
+    """Photo model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True, nullable=False)
+    picture: so.Mapped[bytes] = so.mapped_column(sa.LargeBinary, nullable=False)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='photo', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return '<Photo UserID: {}>'.format(self.user_id)
+
+class TestSession(BaseModel):
+    """TestSession model."""
+    __table_args__ = (sa.UniqueConstraint('test_date', 'class_batch_id'), {'extend_existing': True})
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    test_date: so.Mapped[datetime] = so.mapped_column(sa.Date, nullable=False)
+    class_batch_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_batch.id'), nullable=False)
+    max_score: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=False)
+
+    class_batch: so.Mapped['ClassBatch'] = so.relationship()
+
+    def __repr__(self):
+        return f'<TestSession Date: {self.test_date} Batch: {self.class_batch_id}>'
+
+class TestSessionScore(BaseModel):
+    """TestSessionScore model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    test_session_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('test_session.id'), nullable=False)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    score: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=False)
+    note: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
+
+    test_session: so.Mapped['TestSession'] = so.relationship()
+    user: so.Mapped['User'] = so.relationship(back_populates='test_session_score', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return f'<TestSessionScore UserID: {self.user_id} TestSessionID: {self.test_session_id}>'
+
+class Task(BaseModel):
+    """Task model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    name: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
+    description: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
+    class_batch_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_batch.id'), nullable=False)
+    due_date: so.Mapped[datetime] = so.mapped_column(sa.Date, nullable=False)
+
+    class_batch: so.Mapped['ClassBatch'] = so.relationship()
+
+    def __repr__(self):
+        return '<Task Name: {}>'.format(self.name)
+
+class UserTask(BaseModel):
+    """UserTask model."""
+    __table_args__ = (sa.UniqueConstraint('user_id', 'task_id'), {'extend_existing': True})
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    task_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('task.id'), nullable=False)
+    status: so.Mapped[bool] = so.mapped_column(sa.Boolean, nullable=False)
+    note: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='user_task', foreign_keys=[user_id])
+    task: so.Mapped['Task'] = so.relationship()
+
+    def __repr__(self):
+        return f'<UserTask UserID: {self.user_id} TaskID: {self.task_id}>'
+
+class SkillLookup(db.Model):
+    """SkillLookup model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    skill: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
+
+    def __repr__(self):
+        return '<SkillLookup {}>'.format(self.skill)
+
+class UserSkill(BaseModel):
+    """UserSkill model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    skill_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('skill_lookup.id'), nullable=False)
+    skill_detail: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='user_skill', foreign_keys=[user_id])
+    skill: so.Mapped['SkillLookup'] = so.relationship()
+
+    def __repr__(self):
+        return f'<UserSkill UserID: {self.user_id} SkillID: {self.skill_id}>'
+
+class DuaCatLookup(db.Model):
+    """DuaCatLookup model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    dua: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
+
+    def __repr__(self):
+        return '<DuaCatLookup {}>'.format(self.dua)
+
+class UserDua(BaseModel):
+    """UserDua model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    dua_cat_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('dua_cat_lookup.id'), nullable=False)
+    class_session_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_session.id'), nullable=False)
+    dua_detail: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='user_dua', foreign_keys=[user_id])
+    dua_category: so.Mapped['DuaCatLookup'] = so.relationship()
+    class_session: so.Mapped['ClassSession'] = so.relationship()
+
+    def __repr__(self):
+        return f'<UserDua UserID: {self.user_id} DuaCatID: {self.dua_cat_id}>'
+
+class Aaamal(BaseModel):
+    """Aaamal model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    fazar_ba_jamat: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    roza: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    zikr: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    tahajjud: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    sadka: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+
+    user: so.Mapped['User'] = so.relationship(back_populates='aamal')
+
+    def __repr__(self):
+        return '<Aaamal UserID: {}>'.format(self.user_id)
 
 class ClassName(BaseModel):
     """ClassName model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(8), unique=True, nullable=False)
 
+    def __repr__(self):
+        return '<ClassName {}>'.format(self.name)
+
 class ClassBatchStatus(db.Model):
     """ClassBatchStatus lookup table."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     status: so.Mapped[str] = so.mapped_column(sa.String(16), unique=True, nullable=False)
 
 class ClassBatch(BaseModel):
     """ClassBatch model."""
+    __table_args__ = (sa.UniqueConstraint('class_name_id', 'batch_no'), {'extend_existing': True})
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     class_name_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_name.id'), nullable=False)
     batch_no: so.Mapped[str] = so.mapped_column(sa.String(3), nullable=False)
@@ -97,10 +443,10 @@ class ClassBatch(BaseModel):
 
     class_name: so.Mapped['ClassName'] = so.relationship()
     status: so.Mapped['ClassBatchStatus'] = so.relationship()
-    __table_args__ = (sa.UniqueConstraint('class_name_id', 'batch_no'),)
 
 class ClassRegion(BaseModel):
     """ClassRegion model."""
+    __table_args__ = (sa.UniqueConstraint('class_name_id', 'class_batch_id', 'section'), {'extend_existing': True})
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     class_name_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_name.id'), nullable=False)
     class_batch_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_batch.id'), nullable=False)
@@ -109,10 +455,10 @@ class ClassRegion(BaseModel):
 
     class_name: so.Mapped['ClassName'] = so.relationship()
     class_batch: so.Mapped['ClassBatch'] = so.relationship()
-    __table_args__ = (sa.UniqueConstraint('class_name_id', 'class_batch_id', 'section'),)
 
 class ClassGroup(BaseModel):
     """ClassGroup model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     class_region_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_region.id'), nullable=False, unique=True)
@@ -123,6 +469,7 @@ class ClassGroup(BaseModel):
 
 class ClassGroupMentor(BaseModel):
     """ClassGroupMentor model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
     class_name_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_name.id'), nullable=False)
@@ -138,6 +485,7 @@ class ClassGroupMentor(BaseModel):
 
 class UserStatusInbatch(BaseModel):
     """UserStatusInbatch model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
     class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group.id'), nullable=False)
@@ -147,28 +495,29 @@ class UserStatusInbatch(BaseModel):
     class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])
     status: so.Mapped['UserStatusLookup'] = so.relationship(foreign_keys=[status_id])
 
-
 class UserStatusLookup(db.Model):
     """UserStatus lookup table."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     status: so.Mapped[str] = so.mapped_column(sa.String(16), unique=True, nullable=False)
     description: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
 
 class StudentGroup(BaseModel):
     """StudentGroup model."""
+    __table_args__ = (sa.UniqueConstraint('user_id', 'class_group_id'), {'extend_existing': True})
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
     class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group.id'), nullable=False)
     index_no: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
-    status_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user_status.id'), nullable=False)
+    status_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user_status_lookup.id'), nullable=False)
 
     user: so.Mapped['User'] = so.relationship(foreign_keys=[user_id])
     class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])
-    status: so.Mapped['UserStatusInbatch'] = so.relationship(foreign_keys=[status_id])
-    __table_args__ = (sa.UniqueConstraint('user_id', 'class_group_id'),)
+    status: so.Mapped['UserStatusLookup'] = so.relationship(foreign_keys=[status_id])
 
 class ClassBatchTeacher(BaseModel):
     """ClassBatchTeacher model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
     class_batch_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_batch.id'), nullable=False)
@@ -178,6 +527,7 @@ class ClassBatchTeacher(BaseModel):
 
 class Role(db.Model):
     """Role lookup table."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     role: so.Mapped[str] = so.mapped_column(sa.String(16), unique=True, nullable=False)
     level: so.Mapped[int] = so.mapped_column(sa.Integer, unique=True, nullable=False)
@@ -185,6 +535,7 @@ class Role(db.Model):
 
 class UserRole(BaseModel):
     """UserRole model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     role_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('role.id'), index=True, nullable=False)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), index=True, nullable=False)
@@ -200,6 +551,7 @@ class UserRole(BaseModel):
 
 class Message(BaseModel):
     """Message model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     sender_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
     recipient_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
@@ -211,6 +563,7 @@ class Message(BaseModel):
 
 class File(BaseModel):
     """File model."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     filename: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=False)
     data: so.Mapped[bytes] = so.mapped_column(sa.LargeBinary, nullable=False)
@@ -218,20 +571,9 @@ class File(BaseModel):
 
     user: so.Mapped['User'] = so.relationship(foreign_keys=[user_id])
 
-
-
 class Regions(db.Model):
-    """Represents a region in the world.
-
-    Attributes:
-        id (int): The primary key for the region.
-        name (str): The name of the region.
-        translations (str): Translations of the region name.
-        created_at (datetime): The timestamp when the region was created.
-        updated_at (datetime): The timestamp when the region was last updated.
-        flag (bool): A flag indicating the status of the region.
-        wikiDataId (str): The WikiData ID for the region.
-    """
+    """Represents a region in the world."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True, autoincrement=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(100), nullable=False)
     translations: so.Mapped[str] = so.mapped_column(sa.Text)
@@ -243,21 +585,9 @@ class Regions(db.Model):
     def __repr__(self):
         return f'<Region {self.name}>'
 
-
 class Subregions(db.Model):
-    """Represents a subregion within a region.
-
-    Attributes:
-        id (int): The primary key for the subregion.
-        name (str): The name of the subregion.
-        translations (str): Translations of the subregion name.
-        region_id (int): The foreign key for the region this subregion belongs to.
-        created_at (datetime): The timestamp when the subregion was created.
-        updated_at (datetime): The timestamp when the subregion was last updated.
-        flag (bool): A flag indicating the status of the subregion.
-        wikiDataId (str): The WikiData ID for the subregion.
-        region (Regions): The relationship to the parent region.
-    """
+    """Represents a subregion within a region."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True, autoincrement=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(100), nullable=False)
     translations: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
@@ -272,41 +602,9 @@ class Subregions(db.Model):
     def __repr__(self):
         return f'<Subregion {self.name}>'
 
-
 class Countries(db.Model):
-    """Represents a country.
-
-    Attributes:
-        id (int): The primary key for the country.
-        name (str): The name of the country.
-        iso3 (str): The 3-letter ISO code for the country.
-        numeric_code (str): The numeric code for the country.
-        iso2 (str): The 2-letter ISO code for the country.
-        phonecode (str): The phone code for the country.
-        capital (str): The capital of the country.
-        currency (str): The currency of the country.
-        currency_name (str): The name of the currency.
-        currency_symbol (str): The symbol of the currency.
-        tld (str): The top-level domain of the country.
-        native (str): The native name of the country.
-        region (str): The region of the country.
-        region_id (int): The foreign key for the region this country belongs to.
-        subregion (str): The subregion of the country.
-        subregion_id (int): The foreign key for the subregion this country belongs to.
-        nationality (str): The nationality of the country.
-        timezones (str): The timezones of the country.
-        translations (str): Translations of the country name.
-        latitude (float): The latitude of the country.
-        longitude (float): The longitude of the country.
-        emoji (str): The emoji for the country.
-        emojiU (str): The unicode for the country's emoji.
-        created_at (datetime): The timestamp when the country was created.
-        updated_at (datetime): The timestamp when the country was last updated.
-        flag (bool): A flag indicating the status of the country.
-        wikiDataId (str): The WikiData ID for the country.
-        region_ref (Regions): The relationship to the parent region.
-        subregion_ref (Subregions): The relationship to the parent subregion.
-    """
+    """Represents a country."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True, autoincrement=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(100), nullable=False)
     iso3: so.Mapped[str] = so.mapped_column(sa.String(3), nullable=True)
@@ -341,29 +639,9 @@ class Countries(db.Model):
     def __repr__(self):
         return f'<Country {self.name}>'
 
-
 class States(db.Model):
-    """Represents a state within a country.
-
-    Attributes:
-        id (int): The primary key for the state.
-        name (str): The name of the state.
-        country_id (int): The foreign key for the country this state belongs to.
-        country_code (str): The 2-letter code of the country.
-        fips_code (str): The FIPS code for the state.
-        iso2 (str): The 2-letter ISO code for the state.
-        type (str): The type of the state.
-        level (int): The level of the state.
-        parent_id (int): The ID of the parent state.
-        native (str): The native name of the state.
-        latitude (float): The latitude of the state.
-        longitude (float): The longitude of the state.
-        created_at (datetime): The timestamp when the state was created.
-        updated_at (datetime): The timestamp when the state was last updated.
-        flag (bool): A flag indicating the status of the state.
-        wikiDataId (str): The WikiData ID for the state.
-        country (Countries): The relationship to the parent country.
-    """
+    """Represents a state within a country."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True, autoincrement=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=False)
     country_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('countries.id'), nullable=False)
@@ -386,26 +664,9 @@ class States(db.Model):
     def __repr__(self):
         return f'<State {self.name}>'
 
-
 class Cities(db.Model):
-    """Represents a city within a state.
-
-    Attributes:
-        id (int): The primary key for the city.
-        name (str): The name of the city.
-        state_id (int): The foreign key for the state this city belongs to.
-        state_code (str): The code of the state.
-        country_id (int): The foreign key for the country this city belongs to.
-        country_code (str): The 2-letter code of the country.
-        latitude (float): The latitude of the city.
-        longitude (float): The longitude of the city.
-        created_at (datetime): The timestamp when the city was created.
-        updated_at (datetime): The timestamp when the city was last updated.
-        flag (bool): A flag indicating the status of the city.
-        wikiDataId (str): The WikiData ID for the city.
-        state (States): The relationship to the parent state.
-        country (Countries): The relationship to the parent country.
-    """
+    """Represents a city within a state."""
+    __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True, autoincrement=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=False)
     state_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('states.id'), nullable=False)
@@ -424,5 +685,3 @@ class Cities(db.Model):
 
     def __repr__(self):
         return f'<City {self.name}>'
-
-
