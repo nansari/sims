@@ -136,7 +136,19 @@ class ClassGroupMentor(BaseModel):
     class_region: so.Mapped['ClassRegion'] = so.relationship(foreign_keys=[class_region_id])
     class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])
 
-class UserStatus(db.Model):
+class UserStatusInbatch(BaseModel):
+    """UserStatusInbatch model."""
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group.id'), nullable=False)
+    status_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user_status_lookup.id'), nullable=False)
+
+    user: so.Mapped['User'] = so.relationship(foreign_keys=[user_id])
+    class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])
+    status: so.Mapped['UserStatusLookup'] = so.relationship(foreign_keys=[status_id])
+
+
+class UserStatusLookup(db.Model):
     """UserStatus lookup table."""
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     status: so.Mapped[str] = so.mapped_column(sa.String(16), unique=True, nullable=False)
@@ -152,7 +164,7 @@ class StudentGroup(BaseModel):
 
     user: so.Mapped['User'] = so.relationship(foreign_keys=[user_id])
     class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])
-    status: so.Mapped['UserStatus'] = so.relationship(foreign_keys=[status_id])
+    status: so.Mapped['UserStatusInbatch'] = so.relationship(foreign_keys=[status_id])
     __table_args__ = (sa.UniqueConstraint('user_id', 'class_group_id'),)
 
 class ClassBatchTeacher(BaseModel):
