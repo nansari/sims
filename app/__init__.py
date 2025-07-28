@@ -12,6 +12,7 @@ migrate = Migrate()
 login = LoginManager()
 
 def create_app():
+    """Create and configure the Flask application."""""
     app = Flask(__name__)
     app.config.from_object(Config)
 

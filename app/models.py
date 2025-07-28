@@ -44,7 +44,7 @@ class User(UserMixin, db.Model):
     # UserMixin provides - is_authenticated, is_active, is_anonymous, get_id()
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True,)
-    gender: so.Mapped[str] = so.mapped_column(sa.String(10), nullable=True)
+    gender: so.Mapped[str] = so.mapped_column(sa.String(1), nullable=False)
 
     password: so.Mapped['Password'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Password.user_id'])
     contact: so.Mapped['Contact'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Contact.user_id'])
@@ -83,26 +83,6 @@ class User(UserMixin, db.Model):
             return check_password_hash(self.password.password_hash, password)
         return False
 
-
-class Password(db.Model):
-    """Password model."""
-    __table_args__ = {'extend_existing': True}
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    password_hash: so.Mapped[str] = so.mapped_column(sa.String(256))
-    attempt_counts: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
-    is_allowed: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
-    last_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
-    last_successful_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
-
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True)
-    user: so.Mapped['User'] = so.relationship(back_populates='password')
-
-
-
-
-
-
-
 class Contact(BaseModel):
     """Contact model."""
     __table_args__ = {'extend_existing': True}
@@ -110,12 +90,31 @@ class Contact(BaseModel):
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True, nullable=False)
     mobile: so.Mapped[int] = so.mapped_column(sa.BigInteger, nullable=True)
     whatsapp: so.Mapped[int] = so.mapped_column(sa.BigInteger, nullable=True)
-    
+    email: so.Mapped[str] = so.mapped_column(sa.String(256), unique=True, nullable=False)
 
     user: so.Mapped['User'] = so.relationship(back_populates='contact', foreign_keys=[user_id])
+    password: so.Mapped['Password'] = so.relationship(back_populates='contact', uselist=False, foreign_keys='Password.email')
 
     def __repr__(self):
         return '<Contact {}>'.format(self.email)
+
+class Password(db.Model):
+    """Password model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    password_hash: so.Mapped[str] = so.mapped_column(sa.String(256))
+    attempt_counts: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
+    is_allowed: so.Mapped[int] = so.mapped_column(sa.Integer, default=False)
+    force_change: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
+    last_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
+    last_successful_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
+
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True)
+    email: so.Mapped[str] = so.mapped_column(sa.String(256), sa.ForeignKey('contact.email'), unique=True, nullable=False)
+    user: so.Mapped['User'] = so.relationship(back_populates='password')
+    contact: so.Mapped['Contact'] = so.relationship(back_populates='password', foreign_keys=[email])
+
+
 
 class HomeAddress(BaseModel):
     """HomeAddress model."""
