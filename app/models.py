@@ -13,6 +13,7 @@ timestamps and users.
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from sqlalchemy.orm import foreign
 from app import db, login
 from datetime import datetime, timezone
 from flask_login import UserMixin
@@ -20,9 +21,6 @@ from typing import Optional
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy_utils import EmailType
 from sqlalchemy import BigInteger
-
-# Import all models to ensure they are registered with SQLAlchemy
-
 
 
 @login.user_loader
@@ -71,7 +69,6 @@ class User(UserMixin, db.Model):
         return self.contact.email if self.contact else None
 
 
-
 class Contact(BaseModel):
     """Contact model."""
     __table_args__ = {'extend_existing': True}
@@ -82,42 +79,31 @@ class Contact(BaseModel):
     email: so.Mapped[str] = so.mapped_column(sa.String(256), unique=True, nullable=False, index=True)
 
     user: so.Mapped['User'] = so.relationship('User', back_populates='contact', foreign_keys=[user_id])
-    password: so.Mapped['Password'] = so.relationship('Password', back_populates='contact', uselist=False)
-
+    
     def __repr__(self):
-        return '<Contact {}>'.format(self.email)
+        return f'<Contact {self.email}>'
 
 class Password(db.Model):
     """Password model."""
     __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True)
     password_hash: so.Mapped[str] = so.mapped_column(sa.String(256))
     attempt_counts: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
-    is_allowed: so.Mapped[int] = so.mapped_column(sa.Integer, default=False)
+    is_allowed: so.Mapped[int] = so.mapped_column(sa.Boolean, default=False)
     force_change: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
     last_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
     last_successful_attempt_time: so.Mapped[datetime] = so.mapped_column(sa.TIMESTAMP, nullable=True, default=None)
 
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True)
-    email: so.Mapped[str] = so.mapped_column(sa.String(256), sa.ForeignKey('contact.email'), unique=True, nullable=False)
     user: so.Mapped['User'] = so.relationship('User', back_populates='password')
-    contact: so.Mapped['Contact'] = so.relationship('Contact', back_populates='password')
 
-    @property
-    def password_hash(self):
-        """Prevent password from being accessed"""
-        raise AttributeError('password is not a readable attribute')
-    
-    @password_hash.setter
-    def password_hash(self, password):
+    def set_password(self, password):
         """Set password."""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         """Check password."""
-        if self.password:
-            return check_password_hash(self.password.password_hash, password)
-        return False
+        return check_password_hash(self.password_hash, password)
 
 
 class HomeAddress(BaseModel):
@@ -156,7 +142,7 @@ class ResidentAddress(BaseModel):
     city: so.Mapped['Cities'] = so.relationship(foreign_keys=[city_id])
 
     def __repr__(self):
-        return '<ResidentAddress UserID: {}>'.format(self.user_id)
+        return f'<ResidentAddress UserID: {self.user_id}>'
 
 class OtherDetail(BaseModel):
     """OtherDetail model."""
@@ -174,7 +160,7 @@ class OtherDetail(BaseModel):
     user: so.Mapped['User'] = so.relationship(back_populates='other_details', foreign_keys=[user_id])
 
     def __repr__(self):
-        return '<OtherDetail UserID: {}>'.format(self.user_id)
+        return f'<OtherDetail UserID: {self.user_id}>'
 
 class ProgressRecord(BaseModel):
     """ProgressRecord model."""
@@ -186,7 +172,7 @@ class ProgressRecord(BaseModel):
     user: so.Mapped['User'] = so.relationship(back_populates='progress_record', foreign_keys=[user_id])
 
     def __repr__(self):
-        return '<ProgressRecord UserID: {}>'.format(self.user_id)
+        return f'<ProgressRecord UserID: {self.user_id}>'
 
 class AttendanceStatusLookup(db.Model):
     """AttendanceStatusLookup model."""
@@ -195,7 +181,7 @@ class AttendanceStatusLookup(db.Model):
     status: so.Mapped[str] = so.mapped_column(sa.String(1), unique=True, nullable=False)
 
     def __repr__(self):
-        return '<AttendanceStatusLookup {}>'.format(self.status)
+        return f'<AttendanceStatusLookup {self.status}>'
 
 class ClassSession(BaseModel):
     """ClassSession model."""
@@ -236,7 +222,7 @@ class TemperamentLookup(db.Model):
     temperament: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
 
     def __repr__(self):
-        return '<TemperamentLookup {}>'.format(self.temperament)
+        return f'<TemperamentLookup {self.temperament}>'
 
 class UserTemperament(BaseModel):
     """UserTemperament model."""
@@ -259,7 +245,7 @@ class RegStatusLookup(db.Model):
     status: so.Mapped[str] = so.mapped_column(sa.String(16), unique=True, nullable=False)
 
     def __repr__(self):
-        return '<RegStatusLookup {}>'.format(self.status)
+        return f'<RegStatusLookup {self.status}>'
 
 class UserRegStatus(BaseModel):
     """UserRegStatus model."""
@@ -297,7 +283,7 @@ class Photo(BaseModel):
     user: so.Mapped['User'] = so.relationship(back_populates='photo', foreign_keys=[user_id])
 
     def __repr__(self):
-        return '<Photo UserID: {}>'.format(self.user_id)
+        return '<Photo UserID: {self.user_id}>'
 
 class TestSession(BaseModel):
     """TestSession model."""
@@ -339,7 +325,7 @@ class Task(BaseModel):
     class_batch: so.Mapped['ClassBatch'] = so.relationship()
 
     def __repr__(self):
-        return '<Task Name: {}>'.format(self.name)
+        return f'<Task Name: {self.name}>'
 
 class UserTask(BaseModel):
     """UserTask model."""
@@ -363,7 +349,7 @@ class SkillLookup(db.Model):
     skill: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
 
     def __repr__(self):
-        return '<SkillLookup {}>'.format(self.skill)
+        return f'<SkillLookup {self.skill}>'
 
 class UserSkill(BaseModel):
     """UserSkill model."""
@@ -415,7 +401,7 @@ class Aaamal(BaseModel):
     tahajjud: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
     sadka: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
 
-    user: so.Mapped['User'] = so.relationship(back_populates='aamal', foreign_keys=[user_id])x
+    user: so.Mapped['User'] = so.relationship(back_populates='aamal', foreign_keys=[user_id])
 
     def __repr__(self):
         return '<Aaamal UserID: {}>'.format(self.user_id)
