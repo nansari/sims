@@ -45,55 +45,44 @@ class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True,)
     gender: so.Mapped[str] = so.mapped_column(sa.String(1), nullable=False)
-
-    password: so.Mapped['Password'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Password.user_id'])
-    contact: so.Mapped['Contact'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Contact.user_id'])
-    home_address: so.Mapped['HomeAddress'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['HomeAddress.user_id'])
-    resident_address: so.Mapped['ResidentAddress'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['ResidentAddress.user_id'])
-    other_details: so.Mapped['OtherDetail'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['OtherDetail.user_id'])
-    progress_record: so.Mapped[list['ProgressRecord']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['ProgressRecord.user_id'])
-    attendance: so.Mapped[list['UserAttendance']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserAttendance.user_id'])
-    user_temperament: so.Mapped[list['UserTemperament']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserTemperament.user_id'])
-    user_registration_status: so.Mapped[list['UserRegStatus']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserRegStatus.user_id'])
-    callout_time: so.Mapped['CallOutTime'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['CallOutTime.user_id'])
-    photo: so.Mapped['Photo'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Photo.user_id'])
-    test_session_score: so.Mapped[list['TestSessionScore']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['TestSessionScore.user_id'])
-    user_task: so.Mapped[list['UserTask']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserTask.user_id'])
-    user_skill: so.Mapped[list['UserSkill']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserSkill.user_id'])
-    user_dua: so.Mapped[list['UserDua']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys=['UserDua.user_id'])
-    aamal: so.Mapped['Aaamal'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys=['Aaamal.user_id'])
-    gender: so.Mapped[str] = so.mapped_column(sa.String(10), nullable=True)
-    bithdate: so.Mapped[int] = so.mapped_column(
+    birthyear: so.Mapped[int] = so.mapped_column(
         sa.Integer(),
-        sa.CheckConstraint('bithdate BETWEEN 1950 and 2099'))
+        sa.CheckConstraint('birthyear BETWEEN 1950 and 2099'))
 
+    password: so.Mapped['Password'] = so.relationship('Password', back_populates='user', cascade='all, delete-orphan', uselist=False)
+    contact: so.Mapped['Contact'] = so.relationship('Contact', back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='Contact.user_id')
+    home_address: so.Mapped['HomeAddress'] = so.relationship('HomeAddress', back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='HomeAddress.user_id')
+    resident_address: so.Mapped['ResidentAddress'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='ResidentAddress.user_id')
+    other_details: so.Mapped['OtherDetail'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='OtherDetail.user_id')
+    progress_record: so.Mapped[list['ProgressRecord']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='ProgressRecord.user_id')
+    attendance: so.Mapped[list['UserAttendance']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserAttendance.user_id')
+    user_temperament: so.Mapped[list['UserTemperament']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserTemperament.user_id')
+    user_registration_status: so.Mapped[list['UserRegStatus']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserRegStatus.user_id')
+    callout_time: so.Mapped['CallOutTime'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='CallOutTime.user_id')
+    photo: so.Mapped['Photo'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='Photo.user_id')
+    test_session_score: so.Mapped[list['TestSessionScore']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='TestSessionScore.user_id')
+    user_task: so.Mapped[list['UserTask']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserTask.user_id')
+    user_skill: so.Mapped[list['UserSkill']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserSkill.user_id')
+    user_dua: so.Mapped[list['UserDua']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserDua.user_id')
+    aamal: so.Mapped['Aaamal'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='Aaamal.user_id')
     @property
-    def password_hash(self):
-        """Prevent password from being accessed"""
-        raise AttributeError('password is not a readable attribute')
+    def email(self) -> str:
+        """Access email from related Contact."""
+        return self.contact.email if self.contact else None
 
-    @password_hash.setter
-    def password_hash(self, password):
-        """Set password."""
-        self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
-        """Check password."""
-        if self.password:
-            return check_password_hash(self.password.password_hash, password)
-        return False
 
 class Contact(BaseModel):
     """Contact model."""
     __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True, nullable=False)
-    mobile: so.Mapped[int] = so.mapped_column(sa.BigInteger, nullable=True)
-    whatsapp: so.Mapped[int] = so.mapped_column(sa.BigInteger, nullable=True)
-    email: so.Mapped[str] = so.mapped_column(sa.String(256), unique=True, nullable=False)
+    mobile: so.Mapped[int] = so.mapped_column(sa.BigInteger, nullable=False)
+    whatsapp: so.Mapped[int] = so.mapped_column(sa.BigInteger, nullable=False)
+    email: so.Mapped[str] = so.mapped_column(sa.String(256), unique=True, nullable=False, index=True)
 
-    user: so.Mapped['User'] = so.relationship(back_populates='contact', foreign_keys=[user_id])
-    password: so.Mapped['Password'] = so.relationship(back_populates='contact', uselist=False, foreign_keys='Password.email')
+    user: so.Mapped['User'] = so.relationship('User', back_populates='contact', foreign_keys=[user_id])
+    password: so.Mapped['Password'] = so.relationship('Password', back_populates='contact', uselist=False)
 
     def __repr__(self):
         return '<Contact {}>'.format(self.email)
@@ -111,9 +100,24 @@ class Password(db.Model):
 
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(256), sa.ForeignKey('contact.email'), unique=True, nullable=False)
-    user: so.Mapped['User'] = so.relationship(back_populates='password')
-    contact: so.Mapped['Contact'] = so.relationship(back_populates='password', foreign_keys=[email])
+    user: so.Mapped['User'] = so.relationship('User', back_populates='password')
+    contact: so.Mapped['Contact'] = so.relationship('Contact', back_populates='password')
 
+    @property
+    def password_hash(self):
+        """Prevent password from being accessed"""
+        raise AttributeError('password is not a readable attribute')
+    
+    @password_hash.setter
+    def password_hash(self, password):
+        """Set password."""
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Check password."""
+        if self.password:
+            return check_password_hash(self.password.password_hash, password)
+        return False
 
 
 class HomeAddress(BaseModel):
@@ -411,7 +415,7 @@ class Aaamal(BaseModel):
     tahajjud: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
     sadka: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
 
-    user: so.Mapped['User'] = so.relationship(back_populates='aamal')
+    user: so.Mapped['User'] = so.relationship(back_populates='aamal', foreign_keys=[user_id])x
 
     def __repr__(self):
         return '<Aaamal UserID: {}>'.format(self.user_id)
