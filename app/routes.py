@@ -1285,20 +1285,22 @@ def update_class_group_item(id):
 def search_user_password():
     form = fo.SearchUserForm()
     users = []
+    action = request.args.get('action', 'update')  # Default to 'update'
+
     if form.validate_on_submit():
         search_term = form.search.data
-        users = db.session.query(mo.User).join(mo.Contact).filter(
+        users = db.session.query(mo.User).join(mo.User.contact).filter(
             sa.or_(
                 mo.User.username.ilike(f'%{search_term}%'),
                 mo.Contact.email.ilike(f'%{search_term}%')
             )
         ).all()
-    return render_template('search_user_password.html', form=form, users=users)
+    return render_template('search_user_password.html', form=form, users=users, action=action)
 
 @current_app.route('/update_password/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def update_password(user_id):
-    if not current_user.role == 'Admin':
+    if not current_user.username == 'admin': # TODO: later add condition check role
         flash('You are not authorized to perform this action.', 'danger')
         return redirect(url_for('index'))
     
@@ -1312,11 +1314,15 @@ def update_password(user_id):
         password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
         if password:
             password.password_hash = generate_password_hash(form.password.data)
-            password.force_change = True
+            password.is_allowed = form.is_allowed.data
+            password.force_change = form.force_change.data
             db.session.commit()
             flash(f'Password for {user.username} has been updated.', 'success')
         else:
-            new_password = mo.Password(user_id=user.id, password_hash=generate_password_hash(form.password.data), force_change=True)
+            new_password = mo.Password(user_id=user.id, 
+                                     password_hash=generate_password_hash(form.password.data), 
+                                     is_allowed=form.is_allowed.data, 
+                                     force_change=form.force_change.data)
             db.session.add(new_password)
             db.session.commit()
             flash(f'Password for {user.username} has been set.', 'success')
@@ -1343,7 +1349,7 @@ def change_password():
 @current_app.route('/list_passwords')
 @login_required
 def list_passwords():
-    if not current_user.role == 'Admin':
+    if not current_user.username == 'admin':
         flash('You are not authorized to perform this action.', 'danger')
         return redirect(url_for('index'))
     users = db.session.query(mo.User).all()
@@ -1352,7 +1358,7 @@ def list_passwords():
 @current_app.route('/remove_password/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def remove_password(user_id):
-    if not current_user.role == 'Admin':
+    if not current_user.username == 'admin': # TODO: later add condition check role
         flash('You are not authorized to perform this action.', 'danger')
         return redirect(url_for('index'))
     
@@ -1372,3 +1378,24 @@ def remove_password(user_id):
         return redirect(url_for('search_user_password'))
 
     return render_template('remove_password.html', user=user)
+
+
+@current_app.route('/remove_passwords', methods=['POST'])
+@login_required
+def remove_passwords():
+    """Handles the removal of multiple user passwords."""
+    if not current_user.username == 'admin': # TODO: later add condition check role
+        flash('You are not authorized to perform this action.', 'danger')
+        return redirect(url_for('index'))
+    
+    user_ids = request.form.getlist('user_ids')
+    if user_ids:
+        for user_id in user_ids:
+            password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user_id))
+            if password:
+                db.session.delete(password)
+        db.session.commit()
+        flash(f'{len(user_ids)} password(s) have been removed.', 'success')
+    else:
+        flash('No users were selected.', 'warning')
+    return redirect(url_for('search_user_password'))

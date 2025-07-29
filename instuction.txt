@@ -1,4 +1,6 @@
-127.0.0.1 - - [30/Jul/2025 00:47:03] "POST /password HTTP/1.1" 500 -
+Fix this.
+
+127.0.0.1 - - [30/Jul/2025 01:14:08] "POST /search_user_password HTTP/1.1" 500 -
 Traceback (most recent call last):
   File "c:\Users\nasim\Documents\git\sims\.venv\Lib\site-packages\flask\app.py", line 1498, in __call__
     return self.wsgi_app(environ, start_response)
@@ -17,7 +19,7 @@ Traceback (most recent call last):
   File "c:\Users\nasim\Documents\git\sims\.venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
     return current_app.ensure_sync(func)(*args, **kwargs)
            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "C:\Users\nasim\Documents\git\sims\app\routes.py", line 219, in password
+  File "C:\Users\nasim\Documents\git\sims\app\routes.py", line 1295, in search_user_password
     ).all()
       ~~~^^
   File "c:\Users\nasim\Documents\git\sims\.venv\Lib\site-packages\sqlalchemy\orm\query.py", line 2673, in all

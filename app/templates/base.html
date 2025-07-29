@@ -126,7 +126,7 @@
         }
 
         .form-check-label {
-            color: #fff;
+            color: var(--text-color);
         }
         .sidebar-menu li a .icon {
             margin-right: 10px;
@@ -273,7 +273,7 @@
                     { icon: 'fa-check-circle', text: 'Class Batch Status', href: "{{ url_for('class_batch_status') }}" }
                 ],
                 remove: [
-                    { icon: 'fa-key', text: 'Password', href: '{{ url_for("search_user_password") }}' },
+                    { icon: 'fa-key', text: 'Password', href: '{{ url_for("search_user_password", action="remove") }}' },
                     { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('remove_class_batch_status') }}' },
                     { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('remove_class_name') }}' },
                     { icon: 'fa-users', text: 'Class Batch', href: '{{ url_for('remove_class_batch') }}' },
@@ -286,7 +286,7 @@
                     { icon: 'fa-user-minus', text: 'User Role', href: '{{ url_for('remove_user_role') }}' }
                 ],
                 update: [
-                    { icon: 'fa-key', text: 'Password', href: '{{ url_for("search_user_password") }}' },
+                    { icon: 'fa-key', text: 'Password', href: '{{ url_for("search_user_password", action="update") }}' },
                     { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('update_class_batch_status') }}' },
                     { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('update_class_name') }}' },
                     { icon: 'fa-users', text: 'Class Batch', href: '{{ url_for('update_class_batch') }}' },

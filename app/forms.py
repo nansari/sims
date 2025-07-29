@@ -316,6 +316,8 @@ class AdminChangePasswordForm(FlaskForm):
         EqualTo('confirm_password', message='Passwords must match')
     ])
     confirm_password = PasswordField('Confirm New Password', validators=[DataRequired()])
+    is_allowed = BooleanField('Is Allowed')
+    force_change = BooleanField('Force Change')
     submit = SubmitField('Update Password')
 
 
