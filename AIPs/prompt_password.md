@@ -1,23 +1,15 @@
-You are an expert web developer.
-User is going to use his email address and password to login.
+Website users are going to use his email (stored in Contact model)  and password_hash(stored in Password model) to login. 
+An exising user admin whose user_id is 1 is able to login using noreply1@google.com	email.
 
-Update User Class:
-- to read password_hash from Password table if user id is present in user_id colum of password table created by Password table . 
 
-Update Password class:
-- Password class will store hash password
-- user_id must be uniq, no duplicate is allowed
-
-Update route in routes.py and realted form in forms.py
-- to Add password for a user who can be searched by using partial name, partial email or ID
-- create templates\password.html
-- create Password class in forms.py to render the form to serach the user from user table by partial name, partial email or ID. password should be typed twice to ensure integrity.
-- If there is already user entry in Password table, on submission, flash message should tell that there was already password and it it is updated otherwise it should tell that new password is added.  Show hyperlink for the user ID that should show all user data from User table.
-
-If database and User table is being create first time, add a admin user with admin123 password and admin@sims.com - all other user field use random values. create a script in data\initial_data\0_first_user.sql to create admin user later on.
-
-Also create a script in data\wipe_database.py to clean up existing database in case I need to start afresh whenever it is needed.
-
-You may implement additional related features if you can.
+Update route in routes.py, realted forms in forms.py and create or update tmplates/*.html to implement following:
+- add Password submeuItems under Add, Remove, Update, List and Search Nav Menu
+- We should be able to search user based on partial name or partial email address and select it to Remove, Update, List and Search Password of a user. In search results, display 
+    - username, id from User model
+    - email, whatsapp and mobile from Contact model
+    - 10 character of password_hash, attempt_count, is_allowed, force_chage, last_attempt_time, last_successful_attempt_time from Password model
+- only user admin or other user with Admin role (that is maintained in UserRole model)can change password of another user. If admins are changing password of other user, then set force_chage to True
+- in Profile Nav Menu, add submenuItem "Change Password" that a user can use to change his own password. It should ask existing password once and new password twice. If correct exising password is provided, then update Password table with new password_hash, set attempt_count to 0 and force_chage to False
+- if force_chage is set to True, redirect user to change his password.
 
 List the plan before making the changes.

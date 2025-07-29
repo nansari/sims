@@ -190,8 +190,17 @@
                     {% if current_user.is_anonymous %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
                     {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('user_profile', username=current_user.username) }}">Profile</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ current_user.username.title() }}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('user_profile', username=current_user.username) }}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Change Password</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                            </ul>
+                        </li>
                     {% endif %}
                     <li class="nav-item d-flex align-items-center me-3">
                         <div class="form-check form-switch">
@@ -219,7 +228,7 @@
         {% if messages %}
             {% for category, message in messages %}
                 <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                    {{ message|safe }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
@@ -249,6 +258,7 @@
                 add: [
                     { icon: 'fa-user-plus', text: 'User Form', href:  "{{ url_for('user_reg') }}" },
                     { icon: 'fa-user-plus', text: 'User WA Text', href:  "{{ url_for('reg_from_wa_text') }}" },
+                    { icon: 'fa-key', text: 'Password', href: "{{ url_for('password') }}" },
                     { icon: 'fa-user-tag', text: 'Roles', href: "{{ url_for('role') }}" },
                     { icon: 'fa-school', text: 'Next Class', href: '#' },
                     { icon: 'fa-sitemap', text: 'Class Name', href: "{{ url_for('class_name') }}" },
@@ -263,6 +273,7 @@
                     { icon: 'fa-check-circle', text: 'Class Batch Status', href: "{{ url_for('class_batch_status') }}" }
                 ],
                 remove: [
+                    { icon: 'fa-key', text: 'Password', href: '{{ url_for("search_user_password") }}' },
                     { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('remove_class_batch_status') }}' },
                     { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('remove_class_name') }}' },
                     { icon: 'fa-users', text: 'Class Batch', href: '{{ url_for('remove_class_batch') }}' },
@@ -275,6 +286,7 @@
                     { icon: 'fa-user-minus', text: 'User Role', href: '{{ url_for('remove_user_role') }}' }
                 ],
                 update: [
+                    { icon: 'fa-key', text: 'Password', href: '{{ url_for("search_user_password") }}' },
                     { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('update_class_batch_status') }}' },
                     { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('update_class_name') }}' },
                     { icon: 'fa-users', text: 'Class Batch', href: '{{ url_for('update_class_batch') }}' },
@@ -290,6 +302,7 @@
                     { icon: 'fa-chalkboard-teacher', text: 'Class Group Mentor', href: '{{ url_for('update_class_group_mentor') }}' },
                 ],
                 list: [
+                    { icon: 'fa-key', text: 'Password', href: '{{ url_for("list_passwords") }}' },
                     { icon: 'fa-user-tag', text: 'User Role', href: '{{ url_for('list_user_roles') }}' },
                     { icon: 'fa-check-circle', text: 'Class Batch Status', href: '{{ url_for('list_class_batch_statuses') }}' },
                     { icon: 'fa-sitemap', text: 'Class Name', href: '{{ url_for('list_class_names') }}' },
@@ -306,6 +319,7 @@
                     { icon: 'fa-edit', text: 'Class', href: '#' }
                 ],
                 search: [
+                    { icon: 'fa-key', text: 'Password', href: '{{ url_for("search_user_password") }}' },
                     { icon: 'fa-sitemap', text: 'Class Name', href: "{{ url_for('search_class_name') }}" },
                     { icon: 'fa-user-edit', text: 'User', href: '#' },
                     { icon: 'fa-map-marker-alt', text: 'Location', href: "{{ url_for('location') }}" },

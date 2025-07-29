@@ -13,6 +13,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SelectField, SubmitField, PasswordField, BooleanField, TextAreaField, DateField, FileField, EmailField, TelField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, Optional,InputRequired, NumberRange
 
+
 import sqlalchemy as sa
 from app import db
 from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, Countries, UserStatusLookup, Contact
@@ -302,4 +303,35 @@ class FileUploadForm(FlaskForm):
 class EmptyForm(FlaskForm):
     """An empty form for CSRF protection."""
     pass
+
+class SearchUserForm(FlaskForm):
+    """Search User Form"""
+    search = StringField('Search', validators=[DataRequired()])
+    submit = SubmitField('Search')
+
+class AdminChangePasswordForm(FlaskForm):
+    """Admin Change Password Form"""
+    password = PasswordField('New Password', validators=[
+        DataRequired(),
+        EqualTo('confirm_password', message='Passwords must match')
+    ])
+    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired()])
+    submit = SubmitField('Update Password')
+
+
+class ChangePasswordForm(FlaskForm):
+    """Change Password Form"""
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[
+        DataRequired(),
+        EqualTo('confirm_new_password', message='Passwords must match')
+    ])
+    confirm_new_password = PasswordField('Confirm New Password', validators=[DataRequired()])
+    submit = SubmitField('Change Password')
+
+class UserSearchForm(FlaskForm):
+    """User Search Form"""
+    search = StringField('Search', validators=[DataRequired()])
+    submit = SubmitField('Search')
+
 

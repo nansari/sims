@@ -23,6 +23,8 @@ import app.models as mo
 from . import forms
 # from flask_debugtoolbar import DebugToolbarExtension
 from functions.parse_wa_text import parse_wa_text_fn
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 # @current_app.route('/home')
 @current_app.route('/')
@@ -52,11 +54,18 @@ def login():
     form = fo.LoginForm()
     if form.validate_on_submit():
         user = db.session.scalar(
-            sa.select(mo.User).join(mo.Contact).where(mo.Contact.email == form.email.data))
-        if user is None or not user.check_password(form.password.data):
+            sa.select(mo.User).join(mo.User.contact).where(mo.Contact.email == form.email.data))
+        
+        if not user:
             flash('Invalid email or password', 'danger')
-            # flash('Invalid email or password')
             return redirect(url_for('login'))
+
+        password_hash = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
+
+        if not password_hash or not mo.Password.check_password(password_hash, form.password.data):
+            flash('Invalid email or password', 'danger')
+            return redirect(url_for('login'))
+
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or urlsplit(next_page).netloc != '':
@@ -200,30 +209,39 @@ def user_reg():
 @login_required
 def password():
     """Renders the password page."""
-    form = forms.PasswordForm()
+    form = fo.UserSearchForm()
+    users = []
     if form.validate_on_submit():
-        user = None
-        if form.user_id.data:
-            user = db.session.get(mo.User, form.user_id.data)
-        elif form.name.data:
-            user = db.session.scalar(sa.select(mo.User).where(mo.User.username.like(f'%{form.name.data}%')))
-        elif form.email.data:
-            user = db.session.scalar(sa.select(mo.User).join(mo.Contact).where(mo.Contact.email == form.email.data))
+        search_term = form.search.data
+        users = db.session.query(mo.User).join(mo.User.contact).filter(
+            sa.or_(
+                mo.User.username.ilike(f'%{search_term}%'),
+                mo.Contact.email.ilike(f'%{search_term}%')
+            )
+        ).all()
+    return render_template('password.html', title='Password', form=form, users=users)
 
-        if user:
-            password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
-            if password:
-                password.password_hash = generate_password_hash(form.password.data)
-                flash(f'Password for <a href="{url_for('user_profile', username=user.username)}">{user.id}</a> updated.')
-            else:
-                password = mo.Password(user_id=user.id, password_hash=generate_password_hash(form.password.data))
-                db.session.add(password)
-                flash(f'Password for <a href="{url_for('user_profile', username=user.username)}">{user.id}</a> added.')
-            db.session.commit()
-            return redirect(url_for('password'))
+@current_app.route('/set_password/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def set_password(user_id):
+    """Renders the set_password page."""
+    user = db.session.get(mo.User, user_id)
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('password'))
+    form = fo.AdminChangePasswordForm()
+    if form.validate_on_submit():
+        password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
+        if password:
+            password.password_hash = generate_password_hash(form.password.data)
+            flash(f'Password for <a href="{url_for('user_profile', username=user.username)}">{user.username}</a> updated.')
         else:
-            flash('User not found.')
-    return render_template('password.html', title='Password', form=form)
+            password = mo.Password(user_id=user.id, password_hash=generate_password_hash(form.password.data))
+            db.session.add(password)
+            flash(f'Password for <a href="{url_for('user_profile', username=user.username)}">{user.username}</a> added.')
+        db.session.commit()
+        return redirect(url_for('password'))
+    return render_template('set_password.html', title='Set Password', form=form, user=user)
 
 @current_app.route('/location', methods=['GET', 'POST'])
 @login_required
@@ -902,10 +920,16 @@ def user_role():
     if request.method == 'POST':
         class_name_id = request.form.get('class_name_id')
         class_batch_id = request.form.get('class_batch_id')
+
         if class_name_id:
             form.class_batch_id.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=class_name_id).all()]
+        else:
+            form.class_batch_id.choices = []
+
         if class_batch_id:
             form.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()]
+        else:
+            form.class_region_id.choices = []
 
     if form.validate_on_submit():
         user_id = form.user_id.data
@@ -1256,3 +1280,95 @@ def update_class_group_item(id):
     return render_template('update_class_group_item.html', title='Update Class Group', form=form, group=group)
 
 
+@current_app.route('/search_user_password', methods=['GET', 'POST'])
+@login_required
+def search_user_password():
+    form = fo.SearchUserForm()
+    users = []
+    if form.validate_on_submit():
+        search_term = form.search.data
+        users = db.session.query(mo.User).join(mo.Contact).filter(
+            sa.or_(
+                mo.User.username.ilike(f'%{search_term}%'),
+                mo.Contact.email.ilike(f'%{search_term}%')
+            )
+        ).all()
+    return render_template('search_user_password.html', form=form, users=users)
+
+@current_app.route('/update_password/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def update_password(user_id):
+    if not current_user.role == 'Admin':
+        flash('You are not authorized to perform this action.', 'danger')
+        return redirect(url_for('index'))
+    
+    user = db.session.get(mo.User, user_id)
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('search_user_password'))
+
+    form = fo.AdminChangePasswordForm()
+    if form.validate_on_submit():
+        password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
+        if password:
+            password.password_hash = generate_password_hash(form.password.data)
+            password.force_change = True
+            db.session.commit()
+            flash(f'Password for {user.username} has been updated.', 'success')
+        else:
+            new_password = mo.Password(user_id=user.id, password_hash=generate_password_hash(form.password.data), force_change=True)
+            db.session.add(new_password)
+            db.session.commit()
+            flash(f'Password for {user.username} has been set.', 'success')
+        return redirect(url_for('search_user_password'))
+
+    return render_template('update_password.html', form=form, user=user)
+
+@current_app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = fo.ChangePasswordForm()
+    if form.validate_on_submit():
+        if current_user.password.check_password(form.current_password.data):
+            current_user.password.set_password(form.new_password.data)
+            current_user.password.force_change = False
+            current_user.password.attempt_counts = 0
+            db.session.commit()
+            flash('Your password has been changed successfully.', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid current password.', 'danger')
+    return render_template('change_password.html', form=form)
+
+@current_app.route('/list_passwords')
+@login_required
+def list_passwords():
+    if not current_user.role == 'Admin':
+        flash('You are not authorized to perform this action.', 'danger')
+        return redirect(url_for('index'))
+    users = db.session.query(mo.User).all()
+    return render_template('list_passwords.html', users=users)
+
+@current_app.route('/remove_password/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def remove_password(user_id):
+    if not current_user.role == 'Admin':
+        flash('You are not authorized to perform this action.', 'danger')
+        return redirect(url_for('index'))
+    
+    user = db.session.get(mo.User, user_id)
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('search_user_password'))
+
+    if request.method == 'POST':
+        password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
+        if password:
+            db.session.delete(password)
+            db.session.commit()
+            flash(f'Password for {user.username} has been removed.', 'success')
+        else:
+            flash(f'Password for {user.username} not found.', 'danger')
+        return redirect(url_for('search_user_password'))
+
+    return render_template('remove_password.html', user=user)
