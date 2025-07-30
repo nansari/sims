@@ -2,6 +2,15 @@
 
 {% block content %}
     <h1>User Role</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert-messages">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
     <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <p>
@@ -52,7 +61,7 @@
     <h2>Existing User Roles</h2>
     <ul>
         {% for user_role in user_roles %}
-        <li>{{ user_role.user.username }} - {{ user_role.role.role }} - {{ user_role.class_batch.batch_no }} - {{ user_role.class_region.section if user_role.class_region else 'All' }} </li>
+        <li>{{ user_role.user.username }} - {{ user_role.role.role }} - {{ user_role.class_batch.class_name.name }} - {{ user_role.class_batch.batch_no }} - {{ user_role.class_region.section if user_role.class_region else 'All' }} </li>
         {% endfor %}
     </ul>
 {% endblock %}

@@ -63,6 +63,7 @@ class User(UserMixin, db.Model):
     user_skill: so.Mapped[list['UserSkill']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserSkill.user_id')
     user_dua: so.Mapped[list['UserDua']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserDua.user_id')
     aamal: so.Mapped['Aaamal'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='Aaamal.user_id')
+    roles: so.Mapped[list['UserRole']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserRole.user_id')
     @property
     def email(self) -> str:
         """Access email from related Contact."""
@@ -524,7 +525,7 @@ class Role(db.Model):
 
 class UserRole(BaseModel):
     """UserRole model."""
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = (sa.UniqueConstraint('user_id', 'role_id', 'class_batch_id'), {'extend_existing': True})
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     role_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('role.id'), index=True, nullable=False)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), index=True, nullable=False)
@@ -533,7 +534,7 @@ class UserRole(BaseModel):
     class_group_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_group.id'), nullable=True)
 
     role: so.Mapped['Role'] = so.relationship(foreign_keys=[role_id])
-    user: so.Mapped['User'] = so.relationship(foreign_keys=[user_id])
+    user: so.Mapped['User'] = so.relationship(back_populates='roles', foreign_keys=[user_id])
     class_region: so.Mapped['ClassRegion'] = so.relationship(foreign_keys=[class_region_id])
     class_batch: so.Mapped['ClassBatch'] = so.relationship(foreign_keys=[class_batch_id])
     class_group: so.Mapped['ClassGroup'] = so.relationship(foreign_keys=[class_group_id])

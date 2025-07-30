@@ -270,8 +270,8 @@ class UserRoleForm(FlaskForm):
     role_id = SelectField('Role', coerce=int, validators=[DataRequired()])
     class_name_id = SelectField('Class Name', coerce=int, validators=[DataRequired()])
     class_batch_id = SelectField('Class Batch', coerce=int, validators=[DataRequired()])
-    class_region_id = SelectField('Class Region', coerce=lambda x: int(x) if x is not None and x != '' else None, validators=[Optional()])
-    class_group_id = SelectField('Class Group', coerce=lambda x: int(x) if x is not None and x != '' else None, validators=[Optional()])
+    class_region_id = SelectField('Class Region', coerce=lambda x: int(x) if x and x != 'None' else None, validators=[Optional()])
+    class_group_id = SelectField('Class Group', coerce=lambda x: int(x) if x and x != 'None' else None, validators=[Optional()])
     submit = SubmitField('Submit')
 
     def __init__(self, *args, **kwargs):

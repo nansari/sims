@@ -474,11 +474,15 @@ def class_name():
 def class_batch():
     form = ClassBatchForm()
     if form.validate_on_submit():
-        class_batch = ClassBatch(class_name_id=form.class_name_id.data, batch_no=form.batch_no.data, start_date=form.start_date.data, status_id=form.status_id.data, created_by=current_user.id, updated_by=current_user.id)
-        db.session.add(class_batch)
-        db.session.commit()
-        flash('Class batch added successfully!')
-        return redirect(url_for('class_batch'))
+        try:
+            class_batch = ClassBatch(class_name_id=form.class_name_id.data, batch_no=form.batch_no.data, start_date=form.start_date.data, status_id=form.status_id.data, created_by=current_user.id, updated_by=current_user.id)
+            db.session.add(class_batch)
+            db.session.commit()
+            flash('Class batch added successfully!')
+            return redirect(url_for('class_batch'))
+        except sa.exc.IntegrityError:
+            db.session.rollback()
+            flash('A batch in the selected Class Name already exist', 'danger')
     query = ClassBatch.query
     search = request.args.get('search')
     if search:
@@ -932,26 +936,19 @@ def user_role():
             form.class_region_id.choices = []
 
     if form.validate_on_submit():
-        user_id = form.user_id.data
-        role_id = form.role_id.data
-        class_batch_id = form.class_batch_id.data
-        class_region_id = form.class_region_id.data
-        class_group_id = form.class_group_id.data
+        try:
+            user_id = form.user_id.data
+            role_id = form.role_id.data
+            class_batch_id = form.class_batch_id.data
 
-        if class_region_id and class_region_id != 0:
-            # Create a single user role for the specific region
-            user_role = UserRole(user_id=user_id, role_id=role_id, class_batch_id=class_batch_id, class_region_id=class_region_id, class_group_id=class_group_id, created_by=current_user.id, updated_by=current_user.id)
+            user_role = UserRole(user_id=user_id, role_id=role_id, class_batch_id=class_batch_id, created_by=current_user.id, updated_by=current_user.id)
             db.session.add(user_role)
-        else:
-            # Create user roles for all regions in the batch
-            regions = ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()
-            for region in regions:
-                user_role = UserRole(user_id=user_id, role_id=role_id, class_batch_id=class_batch_id, class_region_id=region.id, class_group_id=class_group_id, created_by=current_user.id, updated_by=current_user.id)
-                db.session.add(user_role)
-        
-        db.session.commit()
-        flash('User role(s) added successfully!')
-        return redirect(url_for('user_role'))
+            db.session.commit()
+            flash('User role added successfully!')
+            return redirect(url_for('user_role'))
+        except sa.exc.IntegrityError:
+            db.session.rollback()
+            flash('This user role already exists.', 'danger')
         
     user_roles = UserRole.query.all()
     return render_template('user_role.html', title='User Role', form=form, user_roles=user_roles)
