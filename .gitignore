@@ -211,3 +211,4 @@ __marimo__/
 app.db
 migrations/
 .flaskenv
+data/

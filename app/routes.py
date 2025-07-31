@@ -543,7 +543,7 @@ def class_group():
     if search:
         query = query.filter(ClassGroup.description.like(f'%{search}%'))
     indexes = query.all()
-    return render_template('class_group.html', title='Class Group Index', form=form, indexes=indexes)
+    return render_template('class_group.html', title='Class Group', form=form, indexes=indexes)
 
 @current_app.route('/class_group_mentor', methods=['GET', 'POST'])
 @login_required
@@ -1209,7 +1209,7 @@ def update_class_region_item(id):
 def list_class_groups():
     """Renders the list_class_groups page."""
     indexes = ClassGroup.query.all()
-    return render_template('list_class_groups.html', title='List Class Group Indexes', indexes=indexes)
+    return render_template('list_class_groups.html', title='List Class Groupes', indexes=indexes)
 
 
 @current_app.route('/remove_class_group', methods=['GET', 'POST'])
@@ -1223,11 +1223,11 @@ def remove_class_group():
                 index_to_delete = ClassGroup.query.get(index_id)
                 db.session.delete(index_to_delete)
             db.session.commit()
-            flash('Class group indexes deleted successfully!', 'success')
+            flash('Class Groupes deleted successfully!', 'success')
         return redirect(url_for('remove_class_group'))
     
     indexes = ClassGroup.query.all()
-    return render_template('remove_class_group.html', title='Remove Class Group Index', indexes=indexes)
+    return render_template('remove_class_group.html', title='Remove Class Group', indexes=indexes)
 
 
 @current_app.route('/update_class_group', methods=['GET'])
@@ -1235,7 +1235,7 @@ def remove_class_group():
 def update_class_group():
     """Renders the update_class_group page."""
     indexes = ClassGroup.query.all()
-    return render_template('update_class_group.html', title='Update Class Group Index', indexes=indexes)
+    return render_template('update_class_group.html', title='Update Class Group', indexes=indexes)
 
 
 @current_app.route('/update_class_group/<int:id>', methods=['GET', 'POST'])
@@ -1259,22 +1259,40 @@ def update_class_group_item(id):
             form.class_region_id.choices = [(r.id, r.section) for r in ClassRegion.query.filter_by(class_batch_id=class_batch_id).all()]
 
     if form.validate_on_submit():
-        group.name = form.name.data
-        group.class_region_id = form.class_region_id.data
-        group.description = form.description.data
-        group.start_index = form.start_index.data
-        group.end_index = form.end_index.data
-        group.updated_by = current_user.id
+        index.name = form.name.data
+        index.class_region_id = form.class_region_id.data
+        index.description = form.description.data
+        index.start_index = form.start_index.data
+        index.end_index = form.end_index.data
+        index.updated_by = current_user.id
         db.session.commit()
         flash('Class group updated successfully!', 'success')
         return redirect(url_for('update_class_group'))
         
     # Pre-select values for GET request
-    form.class_name_id.data = group.class_region.class_name_id
-    form.class_batch_id.data = group.class_region.class_batch_id
-    form.class_region_id.data = group.class_region_id
+    form.class_name_id.data = index.class_region.class_name_id
+    form.class_batch_id.data = index.class_region.class_batch_id
+    form.class_region_id.data = index.class_region_id
 
-    return render_template('update_class_group_item.html', title='Update Class Group', form=form, group=group)
+    return render_template('update_class_group_item.html', title='Update Class Group', form=form, group=index)
+
+
+@current_app.route('/search_class_group', methods=['GET', 'POST'])
+@login_required
+def search_class_group():
+    """Renders the search_class_group page."""
+    form = fo.SearchClassGroupForm()
+    groups = []
+    if form.validate_on_submit():
+        search_term = form.search.data
+        search_pattern = f'%{search_term}%'
+        groups = db.session.query(ClassGroup).filter(
+            sa.or_(
+                ClassGroup.name.ilike(search_pattern),
+                ClassGroup.description.ilike(search_pattern)
+            )
+        ).all()
+    return render_template('search_class_group.html', title='Search Class Group', form=form, groups=groups)
 
 
 @current_app.route('/search_user_password', methods=['GET', 'POST'])

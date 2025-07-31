@@ -337,3 +337,8 @@ class UserSearchForm(FlaskForm):
     submit = SubmitField('Search')
 
 
+class SearchClassGroupForm(FlaskForm):
+    search = StringField('Search', validators=[DataRequired()])
+    submit = SubmitField('Search')
+
+

@@ -62,8 +62,8 @@ The template also displays a list of existing class regions.
         const classNameSelect = document.getElementById('class_name_id');
         const classBatchSelect = document.getElementById('class_batch_id');
 
-        classNameSelect.addEventListener('change', function () {
-            const classNameId = this.value;
+        function updateBatches() {
+            const classNameId = classNameSelect.value;
             classBatchSelect.innerHTML = '<option value="">Loading...</option>';
 
             if (classNameId) {
@@ -85,7 +85,12 @@ The template also displays a list of existing class regions.
             } else {
                 classBatchSelect.innerHTML = '<option value="">Select a Class Name first</option>';
             }
-        });
+        }
+
+        classNameSelect.addEventListener('change', updateBatches);
+
+        // Initial population
+        updateBatches();
     });
 </script>
 {% endblock %}

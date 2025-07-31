@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Class Group Index</h1>
+    <h1>Class Group</h1>
     <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <p>
@@ -56,10 +56,10 @@
         <p>{{ form.submit() }}</p>
     </form>
     <hr>
-    <h2>Existing Class Group Indexes</h2>
+    <h2>Existing Class Groupes</h2>
     <ul>
         {% for index in indexes %}
-        <li>{{ index.class_region.class_name.name }} - {{ index.class_region.class_batch.batch_no }} - {{ index.class_region.section }} - {{ index.description }} - {{ index.start_index }} - {{ index.end_index }}</li>
+        <li>{{ index.name }} - {{ index.class_region.class_name.name }} - {{ index.class_region.class_batch.batch_no }} - {{ index.class_region.section }} - {{ index.description }} - {{ index.start_index }} - {{ index.end_index }}</li>
         {% endfor %}
     </ul>
 {% endblock %}
@@ -67,8 +67,8 @@
 {% block custom_scripts %}
 <script>
     $(document).ready(function() {
-        $('#class_name_id').on('change', function() {
-            var class_name_id = $(this).val();
+        function update_batches() {
+            var class_name_id = $('#class_name_id').val();
             if (class_name_id) {
                 $.ajax({
                     url: '/api/class_batches/' + class_name_id,
@@ -84,10 +84,10 @@
                 $('#class_batch_id').empty().append('<option>Select Batch</option>');
                 $('#class_region_id').empty().append('<option>Select Region</option>');
             }
-        });
+        }
 
-        $('#class_batch_id').on('change', function() {
-            var class_batch_id = $(this).val();
+        function update_regions() {
+            var class_batch_id = $('#class_batch_id').val();
             if (class_batch_id) {
                 $.ajax({
                     url: '/api/class_regions/' + class_batch_id,
@@ -102,7 +102,20 @@
             } else {
                 $('#class_region_id').empty().append('<option>Select Region</option>');
             }
+        }
+
+        $('#class_name_id').on('change', function() {
+            update_batches();
+            // Clear region dropdown when class name changes
+            $('#class_region_id').empty().append('<option>Select Region</option>');
         });
+
+        $('#class_batch_id').on('change', function() {
+            update_regions();
+        });
+
+        // Initial population
+        update_batches();
     });
 </script>
 {% endblock %}

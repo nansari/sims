@@ -451,7 +451,7 @@ class ClassGroup(BaseModel):
     __table_args__ = {'extend_existing': True}
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
-    class_region_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_region.id'), nullable=False, unique=True)
+    class_region_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('class_region.id'), nullable=False)
     description: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
     start_index: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
     end_index: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)

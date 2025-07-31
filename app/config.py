@@ -28,10 +28,8 @@ class Config:
         GENDERS (list): A list of gender options for user registration.
     """
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(16)
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'app.db')
+    # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    #     'sqlite:///' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///c:/Users/nasim/Documents/git/sims/data/sqlite3_bin/app.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     GENDERS = ['M', 'F']
-
-
-

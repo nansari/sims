@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Update Class Group Index</h1>
+    <h1>Update Class Group</h1>
     <form method="POST" action="{{ url_for('update_class_group_item', id=index.id) }}">
         {{ form.hidden_tag() }}
         <div class="mb-3">
