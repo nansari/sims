@@ -13,7 +13,7 @@ from flask import render_template, flash, redirect, url_for, request, send_file,
 from io import BytesIO
 from flask_login import login_user, logout_user, current_user, login_required
 import sqlalchemy as sa
-from app import db
+from app import db, captcha
 from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm, BatchForm
 from app.models import ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, UserStatusLookup, RegStatusLookup
 # from app.forms import LoginForm, RegistrationForm
@@ -52,24 +52,27 @@ def login():
         return redirect(url_for('index'))
     form = fo.LoginForm()
     if form.validate_on_submit():
-        user = db.session.scalar(
-            sa.select(mo.User).join(mo.User.contact).where(mo.Contact.email == form.email.data))
-        
-        if not user:
-            flash('Invalid email or password', 'danger')
-            return redirect(url_for('login'))
+        if captcha.validate():
+            user = db.session.scalar(
+                sa.select(mo.User).join(mo.User.contact).where(mo.Contact.email == form.email.data))
+            
+            if not user:
+                flash('Invalid email or password', 'danger')
+                return redirect(url_for('login'))
 
-        password_hash = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
+            password_hash = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
 
-        if not password_hash or not mo.Password.check_password(password_hash, form.password.data):
-            flash('Invalid email or password', 'danger')
-            return redirect(url_for('login'))
+            if not password_hash or not mo.Password.check_password(password_hash, form.password.data):
+                flash('Invalid email or password', 'danger')
+                return redirect(url_for('login'))
 
-        login_user(user, remember=form.remember_me.data)
-        next_page = request.args.get('next')
-        if not next_page or urlsplit(next_page).netloc != '':
-            next_page = url_for('index')
-        return redirect(next_page)
+            login_user(user, remember=form.remember_me.data)
+            next_page = request.args.get('next')
+            if not next_page or urlsplit(next_page).netloc != '':
+                next_page = url_for('index')
+            return redirect(next_page)
+        else:
+            flash('Invalid captcha. Please try again.', 'danger')
     return render_template('login.html', title='Sign In', form=form)
 
 @login_required
@@ -182,24 +185,15 @@ def reg_from_wa_text():
 @current_app.route('/support', methods=['GET', 'POST'])
 def support():
     """Renders the support page."""
-    if request.method == 'POST':
-        recaptcha_response = request.form.get('g-recaptcha-response')
-        if recaptcha_response:
-            payload = {
-                'secret': '6LeYgH0rAAAAAIOfXv_P6TERJpilLaliTLxxBjfv',
-                'response': recaptcha_response
-            }
-            response = requests.post('https://www.google.com/recaptcha/api/siteverify', data=payload)
-            result = response.json()
-            if result.get('success'):
-                # Handle form submission
-                flash('Your support request has been submitted successfully!')
-                return redirect(url_for('index'))
-            else:
-                flash('reCAPTCHA verification failed. Please try again.')
+    form = fo.SupportForm()
+    if form.validate_on_submit():
+        if captcha.validate():
+            # Handle form submission
+            flash('Your support request has been submitted successfully!')
+            return redirect(url_for('index'))
         else:
-            flash('Please complete the reCAPTCHA.')
-    return render_template('support.html')
+            flash('Invalid captcha. Please try again.', 'danger')
+    return render_template('support.html', form=form)
 
 @current_app.route('/user_reg', methods=['GET', 'POST'])
 @login_required

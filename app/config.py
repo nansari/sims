@@ -30,6 +30,13 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(16)
     # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
     #     'sqlite:///' + os.path.join(basedir, 'app.db')
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///c:/Users/nasim/Documents/git/sims/data/sqlite3_bin/app.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///c:/Users/nasim/Documents/git/sims/database.db'
+    # SQLALCHEMY_DATABASE_URI = 'sqlite:///c:/Users/nasim/Documents/git/sims/data/sqlite3_bin/app.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     GENDERS = ['M', 'F']
+    # Flask-Session-Captcha
+    CAPTCHA_ENABLE = True
+    CAPTCHA_LENGTH = 6
+    CAPTCHA_WIDTH = 160
+    CAPTCHA_HEIGHT = 60
+    SESSION_TYPE = 'filesystem'

@@ -3,32 +3,28 @@
 <div class="container mt-5">
     <h2>Support Request</h2>
     <p>Please fill out the form below to report an issue.</p>
-    <form action="/support" method="post" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="email" class="form-label">Email Address</label>
-            <input type="email" class="form-control" id="email" name="email" required>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.name.label(class="form-control-label") }}
+            {{ form.name(class="form-control") }}
         </div>
-        <div class="mb-3">
-            <label for="name" class="form-label">Name</label>
-            <input type="text" class="form-control" id="name" name="name" required>
+        <div class="form-group">
+            {{ form.email.label(class="form-control-label") }}
+            {{ form.email(class="form-control") }}
         </div>
-        <div class="mb-3">
-            <label for="user_id" class="form-label">User ID</label>
-            <input type="text" class="form-control" id="user_id" name="user_id">
+        <div class="form-group">
+            {{ form.message.label(class="form-control-label") }}
+            {{ form.message(class="form-control", rows="5") }}
         </div>
-        <div class="mb-3">
-            <label for="issue" class="form-label">Issue</label>
-            <textarea class="form-control" id="issue" name="issue" rows="5" required></textarea>
+        <div class="form-group">
+            {{ form.captcha.label(class="form-control-label") }}
+            {{ form.captcha(class="form-control") }}
+            {{ captcha() }}
         </div>
-        <div class="mb-3">
-            <label for="attachment" class="form-label">Attach File</label>
-            <input class="form-control" type="file" id="attachment" name="attachment">
+        <div class="form-group">
+            {{ form.submit(class="btn btn-primary") }}
         </div>
-        <div class="mb-3">
-            <label for="captcha" class="form-label">What is {{ num1 }} + {{ num2 }}?</label>
-            <input type="text" class="form-control" id="answer" name="answer" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
 {% endblock %}

@@ -27,7 +27,16 @@ class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
+    captcha = StringField('Captcha', validators=[DataRequired()])
     register = SubmitField('Sign In')
+
+class SupportForm(FlaskForm):
+    """Support Form"""
+    name = StringField('Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    message = TextAreaField('Message', validators=[DataRequired()])
+    captcha = StringField('Captcha', validators=[DataRequired()])
+    submit = SubmitField('Submit')
     
 class PasswordForm(FlaskForm):
     """ Password Form """
