@@ -38,24 +38,12 @@ class PasswordForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
+
 class BatchForm(FlaskForm):
-    """
-    A form for selecting a batch.
-
-    This form provides a dropdown field to select a class batch. The choices
-    are dynamically populated from the ClassBatch model.
-    """
-    batch = SelectField('Select Batch', coerce=int)
-    submit = SubmitField('Generate')
-
-    def __init__(self, *args, **kwargs):
-        """
-        Initializes the BatchForm.
-
-        It populates the 'batch' dropdown with all available class batches.
-        """
-        super(BatchForm, self).__init__(*args, **kwargs)
-        self.batch.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
+    """ select a class and batc to generate its registration template """
+    class_name = SelectField('Class Name', choices=[])
+    batch_name = SelectField('Class Batch', choices=[])
+    submit = SubmitField('Generate Registration Template')
 
 
 class RegFromWaText(FlaskForm):

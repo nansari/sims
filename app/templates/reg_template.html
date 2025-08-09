@@ -1,48 +1,44 @@
-{% extends 'base.html' %}
-
-{% block title %}Register Template{% endblock %}
+{% extends "base.html" %}
 
 {% block content %}
- <!DOCTYPE html>
- <html lang="en">
- <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ batch }} Registration Form</title>
- </head>
- <body>
-<pre style="padding: 20px;">
-*STUDENT DETAILS FOR {{ batch }} BATCH*
-Full Name : 
-Mobile# : 
-WhatsApp# : 
-Gender : 
-——————————————
-HOMETOWN DETAILS
-Country :
-State : 
-District : 
-Town/City : 
-——————————————
-CURRENT RESIDENCE
-Country : 
-State :  
-City :
-Area :
-——————————————
-OTHER DETAILS
-Year of birth : 
-Education : 
-Profession : 
-Email Address : 
-——————————————
-REFERRED By : 
-Full Name : 
-Mobile# : 
-Student ID# : 
-Batch# :
-——————————————
-</pre>  
-</body>
-</html>
+<div class="container">
+    <h2>Registration Template</h2>
+    <form method="POST" action="" target="_blank">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.class_name.label(class="form-control-label") }}
+            {{ form.class_name(class="form-control", id="class_name") }}
+        </div>
+        <div class="form-group">
+            {{ form.batch_name.label(class="form-control-label") }}
+            {{ form.batch_name(class="form-control", id="batch_name") }}
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Generate Registration Template" class="btn btn-primary">
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('class_name').addEventListener('change', function() {
+        var classId = this.value;
+        var batchSelect = document.getElementById('batch_name');
+        batchSelect.innerHTML = '';
+
+        if (classId && classId != 0) {
+            fetch('/get_batches/' + classId)
+                .then(response => response.json())
+                .then(data => {
+                    var batchSelect = document.getElementById('batch_name');
+                    batchSelect.innerHTML = '<option value="0">Select Class Batch</option>';
+                    data.batches.forEach(function(batch) {
+                        var option = document.createElement('option');
+                        option.value = batch.id;
+                        option.text = batch.name;
+                        batchSelect.appendChild(option);
+                    });
+                });
+        }
+    });
+</script>
 {% endblock %}

@@ -14,7 +14,7 @@ from io import BytesIO
 from flask_login import login_user, logout_user, current_user, login_required
 import sqlalchemy as sa
 from app import db
-from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm
+from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm, BatchForm
 from app.models import ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, UserStatusLookup, RegStatusLookup
 # from app.forms import LoginForm, RegistrationForm
 # from app.models import User
@@ -26,7 +26,6 @@ from functions.parse_wa_text import parse_wa_text_fn
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-# @current_app.route('/home')
 @current_app.route('/')
 @current_app.route('/index')
 @login_required
@@ -73,6 +72,7 @@ def login():
         return redirect(next_page)
     return render_template('login.html', title='Sign In', form=form)
 
+@login_required
 @current_app.route('/logout')
 def logout():
     """Renders the logout page"""
@@ -81,18 +81,37 @@ def logout():
 
 
 @current_app.route('/reg_template', methods=['GET', 'POST'])
+@login_required
 def reg_template():
     """Renders the reg_template page"""
-    # selected_batch = redirect(url_for('select_a_batch'))
-    # print(selected_batch.data)
     form = fo.BatchForm()
-    if form.validate_on_submit():
-        # render_template('select_batch.html', form=form)
-        # selected_batch = form.batch.data
-        select_a_batch = request.form.get('batch')
-        return render_template('reg_template.html', batch=select_a_batch)
+    form.class_name.choices = [(c.id, c.name) for c in ClassName.query.all()]
+    form.class_name.choices.insert(0, (0, 'Select Class Name'))
 
-    return render_template('select_batch.html', form=form)
+    if request.method == 'POST':
+        class_name_id = form.class_name.data
+        if class_name_id:
+            form.batch_name.choices = [(b.id, b.batch_no) for b in ClassBatch.query.filter_by(class_name_id=class_name_id).all()]
+        else:
+            form.batch_name.choices = []
+        form.batch_name.choices.insert(0, (0, 'Select Class Batch'))
+
+    if form.validate_on_submit():
+        class_name_id = form.class_name.data
+        batch_name_id = form.batch_name.data
+        class_name = ClassName.query.get(class_name_id)
+        batch = ClassBatch.query.get(batch_name_id)
+        return render_template('display_template.html', title=f'{class_name.name}-{batch.batch_no} Registration Template', class_name=class_name.name, batch_no=batch.batch_no)
+
+    return render_template('reg_template.html', title='Registration Template', form=form)
+
+
+@current_app.route('/get_batches/<int:class_id>')
+@login_required
+def get_batches(class_id):
+    batches = ClassBatch.query.filter_by(class_name_id=class_id).all()
+    batch_list = [{'id': batch.id, 'name': batch.batch_no} for batch in batches]
+    return jsonify({'batches': batch_list})
 
 
 @current_app.route('/select_a_batch', methods=['GET', 'POST'])
@@ -121,6 +140,7 @@ def select_a_batch():
         # return render_template('user_reg.html', form=form)
 
 @current_app.route('/reg_from_wa_text', methods=['GET', 'POST'])
+@login_required
 def reg_from_wa_text():
     """Render the reg_from_wa_text page to accept WhatsApp text."""
     form = forms.RegFromWaText()
@@ -472,6 +492,7 @@ def class_name():
 @current_app.route('/class_batch', methods=['GET', 'POST'])
 @login_required
 def class_batch():
+    """Renders the class batch page and handles the creation of new class batches."""
     form = ClassBatchForm()
     if form.validate_on_submit():
         try:
@@ -548,6 +569,7 @@ def class_group():
 @current_app.route('/class_group_mentor', methods=['GET', 'POST'])
 @login_required
 def class_group_mentor():
+    """Renders the class group mentor page."""
     form = ClassGroupMentorForm()
     if form.validate_on_submit():
         class_group_mentor = ClassGroupMentor(user_id=form.user_id.data, class_name_id=form.class_name_id.data, class_batch_id=form.class_batch_id.data, class_region_id=form.class_region_id.data, class_group_id=form.class_group_id.data, created_by=current_user.id, updated_by=current_user.id)
@@ -637,6 +659,7 @@ def search_class_group_mentor():
 @current_app.route('/user_status', methods=['GET', 'POST'])
 @login_required
 def user_status():
+    """Renders the user_status page and handles the creation of new user statuses."""
     form = UserStatusForm()
     if form.validate_on_submit():
         user_status = UserStatusLookup(status=form.status.data, description=form.description.data)
@@ -732,6 +755,7 @@ def student_group():
 @current_app.route('/class_batch_teacher', methods=['GET', 'POST'])
 @login_required
 def class_batch_teacher():
+    """Renders the class_batch_teacher page and handles the creation of new class batch teachers."""
     form = ClassBatchTeacherForm()
     if form.validate_on_submit():
         class_batch_teacher = ClassBatchTeacher(user_id=form.user_id.data, class_batch_id=form.class_batch_id.data, created_by=current_user.id, updated_by=current_user.id)
@@ -745,6 +769,7 @@ def class_batch_teacher():
 @current_app.route('/role', methods=['GET', 'POST'])
 @login_required
 def role():
+    """Renders the role page and handles the creation of new roles."""
     form = RoleForm()
     if form.validate_on_submit():
         role = Role(role=form.role.data, level=form.level.data, description=form.description.data)
@@ -758,6 +783,7 @@ def role():
 @current_app.route('/remove_role', methods=['GET', 'POST'])
 @login_required
 def remove_role():
+    """Renders the remove_role page and handles the deletion of roles."""
     if request.method == 'POST':
         role_ids = request.form.getlist('role_ids')
         if role_ids:
@@ -774,12 +800,14 @@ def remove_role():
 @current_app.route('/update_role', methods=['GET'])
 @login_required
 def update_role():
+    """Renders the update_role page."""
     roles = Role.query.order_by(Role.level).all()
     return render_template('update_role.html', title='Update Role', roles=roles)
 
 @current_app.route('/update_role/<int:id>', methods=['GET', 'POST'])
 @login_required
 def update_role_item(id):
+    """Renders the update_role_item page and handles the update of a specific role."""
     role = Role.query.get_or_404(id)
     form = RoleForm(obj=role)
     if form.validate_on_submit():
@@ -820,6 +848,7 @@ def remove_user_role():
 @current_app.route('/update_user_role', methods=['GET'])
 @login_required
 def update_user_role():
+    """Renders the update_user_role page."""
     query = UserRole.query
     search = request.args.get('search')
     if search:
@@ -902,6 +931,7 @@ def update_user_role_item(id):
 @current_app.route('/list_user_roles')
 @login_required
 def list_user_roles():
+    """Renders the list_user_roles page."""
     query = UserRole.query
     search = request.args.get('search')
     if search:
@@ -1315,6 +1345,7 @@ def search_user_password():
 @current_app.route('/update_password/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def update_password(user_id):
+    """Handles the update password functionality for an admin user."""
     if not current_user.username == 'admin': # TODO: later add condition check role
         flash('You are not authorized to perform this action.', 'danger')
         return redirect(url_for('index'))
@@ -1348,6 +1379,7 @@ def update_password(user_id):
 @current_app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
+    """Handles the change password functionality for the logged-in user."""
     form = fo.ChangePasswordForm()
     if form.validate_on_submit():
         if current_user.password.check_password(form.current_password.data):
@@ -1364,6 +1396,7 @@ def change_password():
 @current_app.route('/list_passwords')
 @login_required
 def list_passwords():
+    """Renders the list_passwords page."""
     if not current_user.username == 'admin':
         flash('You are not authorized to perform this action.', 'danger')
         return redirect(url_for('index'))
@@ -1373,6 +1406,7 @@ def list_passwords():
 @current_app.route('/remove_password/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def remove_password(user_id):
+    """Handles the removal of a user's password."""
     if not current_user.username == 'admin': # TODO: later add condition check role
         flash('You are not authorized to perform this action.', 'danger')
         return redirect(url_for('index'))
