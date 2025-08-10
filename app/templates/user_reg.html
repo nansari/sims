@@ -1,217 +1,267 @@
 {% extends 'base.html' %}
 
-{% block title %}Select a Batch{% endblock %}
+{% block title %}User Registration{% endblock %}
 
 {% block content %}
-    <body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
+<style>
+    .form-container {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    fieldset {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    legend {
+        font-weight: bold;
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+    .form-field {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .form-field label {
+        font-weight: bold;
+        text-align: right;
+    }
+    .form-field .help-icon {
+        margin-left: 8px;
+        cursor: pointer;
+        color: #007bff;
+    }
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 220px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -110px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+    }
+    select, input, textarea {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    select {
+        height: 38px;
+    }
+    .submit-btn {
+        text-align: center;
+        margin-top: 20px;
+    }
+</style>
+
+<h1>Register A New User</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         {% for category, message in messages %}
             <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                {{ message }}
+                {{ message|safe }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endfor %}
     {% endif %}
-    {% endwith %}
-    
-    <h1>Register A New User</h1>
-    {% if a_form_submitted %}
-        <p><a href="{{ url_for('reg_from_wa_text') }}">Register another using WhatsApp"></form></a></p>
-    {% endif %}
+{% endwith %}
 
-    <form method="POST">
-        {{ form.hidden_tag() }}
-            <p>
-                {{ form.classname.label }}<br>
-                {{ form.classname(size=32) }}<br>
-                {% for error in form.classname.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.classbatch.label }}<br>
-                {{ form.classbatch(size=32) }}<br>
-                {% for error in form.classbatch.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.username.label }}<br>
-                {{ form.username(size=32) }}<br>
-                {% for error in form.username.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.mobile.label }}<br>
-                {{ form.mobile(size=32) }}<br>
-                {% for error in form.mobile.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.whatsapp.label }}<br>
-                {{ form.whatsapp(size=32) }}<br>
-                {% for error in form.whatsapp.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.email.label }}<br>
-                {{ form.email(size=32) }}<br>
-                {% for error in form.email.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.gender.label }}<br>
-                {{ form.gender(size=32) }}<br>
-                {% for error in form.gender.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.hometowncountry.label }}<br>
-                {{ form.hometowncountry(size=32) }}<br>
-                {% for error in form.hometowncountry.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.hometownstate.label }}<br>
-                {{ form.hometownstate(size=32) }}<br>
-                {% for error in form.hometownstate.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.hometowndistrict.label }}<br>
-                {{ form.hometowndistrict(size=32) }}<br>
-                {% for error in form.hometowndistrict.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.hometowncity.label }}<br>
-                {{ form.hometowncity(size=32) }}<br>
-                {% for error in form.hometowncity.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.hometownzip.label }}<br>
-                {{ form.hometownzip(size=32) }}<br>
-                {% for error in form.hometownzip.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.residentcountry.label }}<br>
-                {{ form.residentcountry(size=32) }}<br>
-                {% for error in form.residentcountry.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.residencestate.label }}<br>
-                {{ form.residencestate(size=32) }}<br>
-                {% for error in form.residencestate.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.residencecity.label }}<br>
-                {{ form.residencecity(size=32) }}<br>
-                {% for error in form.residencecity.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.residencearea.label }}<br>
-                {{ form.residencearea(size=32) }}<br>
-                {% for error in form.residencearea.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.residentzip.label }}<br>
-                {{ form.residentzip(size=32) }}<br>
-                {% for error in form.residentzip.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.yob.label }}<br>
-                {{ form.yob(size=32) }}<br>
-                {% for error in form.yob.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.education.label }}<br>
-                {{ form.education(size=32) }}<br>
-                {% for error in form.education.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.profession.label }}<br>
-                {{ form.profession(size=32) }}<br>
-                {% for error in form.profession.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.referrer_name.label }}<br>
-                {{ form.referrer_name(size=32) }}<br>
-                {% for error in form.referrer_name.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.referrer_mobile.label }}<br>
-                {{ form.referrer_mobile(size=32) }}<br>
-                {% for error in form.referrer_mobile.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.bio.label }}<br>
-                {{ form.bio(size=32) }}<br>
-                {% for error in form.bio.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.status.label }}<br>
-                {{ form.status(size=32) }}<br>
-                {% for error in form.status.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            </p>{{ form.register() }} </p>
-    </form>        
-    </body>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="form-container">
+
+        <fieldset>
+            <legend>Class Information</legend>
+            <div class="form-field">
+                {{ form.class_name.label }}
+                {{ form.class_name() }}
+            </div>
+            <div class="form-field">
+                {{ form.batch_name.label }}
+                {{ form.batch_name() }}
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Personal Details</legend>
+            <div class="form-field">
+                <label>{{ form.full_name.label.text }}
+                    <span class="tooltip"><i class="fas fa-question-circle help-icon"></i><span class="tooltiptext">{{ form.full_name.description }}</span></span>
+                </label>
+                {{ form.full_name() }}
+            </div>
+            <div class="form-field">
+                <label>{{ form.mobile.label.text }}
+                    <span class="tooltip"><i class="fas fa-question-circle help-icon"></i><span class="tooltiptext">{{ form.mobile.description }}</span></span>
+                </label>
+                {{ form.mobile() }}
+            </div>
+            <div class="form-field">
+                <label>{{ form.whatsapp.label.text }}
+                    <span class="tooltip"><i class="fas fa-question-circle help-icon"></i><span class="tooltiptext">{{ form.whatsapp.description }}</span></span>
+                </label>
+                {{ form.whatsapp() }}
+            </div>
+            <div class="form-field">
+                {{ form.email.label }}
+                {{ form.email() }}
+            </div>
+            <div class="form-field">
+                <label>{{ form.gender.label.text }}
+                    <span class="tooltip"><i class="fas fa-question-circle help-icon"></i><span class="tooltiptext">{{ form.gender.description }}</span></span>
+                </label>
+                {{ form.gender() }}
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Hometown Address</legend>
+            <div class="form-field">
+                {{ form.hometown_country.label }}
+                {{ form.hometown_country() }}
+            </div>
+            <div class="form-field">
+                {{ form.hometown_state.label }}
+                {{ form.hometown_state() }}
+            </div>
+            <div class="form-field">
+                {{ form.hometown_district.label }}
+                {{ form.hometown_district() }}
+            </div>
+            <div class="form-field">
+                {{ form.hometown_city.label }}
+                {{ form.hometown_city() }}
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Current Residence</legend>
+            <div class="form-field">
+                {{ form.current_country.label }}
+                {{ form.current_country() }}
+            </div>
+            <div class="form-field">
+                {{ form.current_state.label }}
+                {{ form.current_state() }}
+            </div>
+            <div class="form-field">
+                {{ form.current_city.label }}
+                {{ form.current_city() }}
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Other Information</legend>
+            <div class="form-field">
+                {{ form.yob.label }}
+                {{ form.yob() }}
+            </div>
+            <div class="form-field">
+                {{ form.education.label }}
+                {{ form.education() }}
+            </div>
+            <div class="form-field">
+                {{ form.profession.label }}
+                {{ form.profession() }}
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Referral Details</legend>
+            <div class="form-field">
+                {{ form.referrer_name.label }}
+                {{ form.referrer_name() }}
+            </div>
+            <div class="form-field">
+                <label>{{ form.referrer_mobile.label.text }}
+                    <span class="tooltip"><i class="fas fa-question-circle help-icon"></i><span class="tooltiptext">{{ form.referrer_mobile.description }}</span></span>
+                </label>
+                {{ form.referrer_mobile() }}
+            </div>
+            <div class="form-field">
+                {{ form.referrer_email.label }}
+                {{ form.referrer_email() }}
+            </div>
+            <div class="form-field">
+                {{ form.referrer_batch.label }}
+                {{ form.referrer_batch() }}
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Additional Information</legend>
+            <div class="form-field">
+                {{ form.any_other_detail.label }}
+                {{ form.any_other_detail() }}
+            </div>
+            <div class="form-field">
+                {{ form.registration_status.label }}
+                {{ form.registration_status() }}
+            </div>
+        </fieldset>
+
+        <div class="submit-btn">
+            {{ form.submit(class='btn btn-primary') }}
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function setupCascadingDropdown(sourceId, targetId, urlTemplate) {
+        const sourceElement = document.getElementById(sourceId);
+        const targetElement = document.getElementById(targetId);
+
+        sourceElement.addEventListener('change', function() {
+            const selectedValue = this.value;
+            if (!selectedValue) {
+                targetElement.innerHTML = '<option value="">-- Select --</option>';
+                return;
+            }
+
+            fetch(urlTemplate.replace('PLACEHOLDER', selectedValue))
+                .then(response => response.json())
+                .then(data => {
+                    targetElement.innerHTML = '<option value="">-- Select --</option>';
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.name;
+                        targetElement.appendChild(option);
+                    });
+                });
+        });
+    }
+
+    setupCascadingDropdown('class_name', 'batch_name', '/api/batches_for_class/PLACEHOLDER');
+    setupCascadingDropdown('hometown_country', 'hometown_state', '/api/states_for_country/PLACEHOLDER');
+    setupCascadingDropdown('hometown_state', 'hometown_district', '/api/cities_for_state/PLACEHOLDER');
+    setupCascadingDropdown('current_country', 'current_state', '/api/states_for_country/PLACEHOLDER');
+    setupCascadingDropdown('current_state', 'current_city', '/api/cities_for_state/PLACEHOLDER');
+});
+</script>
 {% endblock %}
-
-
-<!-- 
-batch = SelectField('Select Batch', choices=Config.BATCHES)
-email = EmailField('Email', validators=[]) #TODO - add email validator
-name = TelField('Name', validators=[])
-gender = TelField('Gender', choices=['M', 'F'], validators=[])
-mobile = TelField('Mobile with country code', validators=[])
-whatsapp = TelField('WhatsApp with country code', validators=[])
-hometowncity = TelField('Hometown City', validators=[])
-hometowndistrict = TelField('Hometown District', validators=[])
-hometowncountry = TelField('Hometown Country', validators=[])
-residencecity = TelField('Current Residence City', validators=[])
-residencestate = TelField('Current Residence State', validators=[])
-residentcountry = TelField('Current Residence Country', validators=[])
-residentzip = TelField('Current Residence Pin/Zip', validators=[])
-education = TelField('Highest Education', validators=[])
-profession = TelField('Profession', validators=[])
-referrer_id = TelField('Referred By ID', validators=[])
-bio = TelField('Notes', validators=[])
-submit = SubmitField('Submit')   -->

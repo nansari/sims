@@ -1,3 +1,0 @@
-Template is being displayed as soon as I select one of class from 'Class Name' filed of /reg_template route.
-
-Update the form and templated to not to generate template until user click on 'Generate Registration Template' submit button and open template in new tab that should have only template so that it would be easy to cut and and paste the text to send to someone in any messaging tool. User can close that tab and comeback to /reg_template route to generate next template if he wish.

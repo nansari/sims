@@ -200,23 +200,49 @@ def support():
 def user_reg():
     """Renders the user_reg page"""
     form = forms.UserRegForm()
-    a_form_submitted = False
-    if form.validate_on_submit(): # True only for POST Methos
-        user = mo.User(username=form.username.data, bithdate=form.yob.data, gender=form.gender.data)
-        user.password = mo.Password(password_hash=generate_password_hash(form.password.data))
-        contact = mo.Contact(email=form.email.data, mobile=form.mobile.data, whatsapp=form.whatsapp.data)
-        user.contact = contact
-        home_address = mo.HomeAddress(country_id=form.hometowncountry.data, state_id=form.hometownstate.data, city_id=form.hometowncity.data, area=form.hometowndistrict.data, zip=form.hometownzip.data)
-        user.home_address = home_address
-        resident_address = mo.ResidentAddress(country_id=form.residentcountry.data, state_id=form.residencestate.data, city_id=form.residencecity.data, area=form.residencearea.data, zip=form.residentzip.data)
-        user.resident_address = resident_address
-        other_detail = mo.OtherDetail(education=form.education.data, profession=form.profession.data)
-        user.other_details = other_detail
+    if form.validate_on_submit():
+        user = mo.User(
+            full_name=form.full_name.data,
+            mobile=form.mobile.data,
+            whatsapp=form.whatsapp.data,
+            email=form.email.data,
+            gender=form.gender.data,
+            hometown_country_id=form.hometown_country.data,
+            hometown_state_id=form.hometown_state.data,
+            hometown_district_id=form.hometown_district.data,
+            hometown_city=form.hometown_city.data,
+            current_country_id=form.current_country.data,
+            current_state_id=form.current_state.data,
+            current_city_id=form.current_city.data,
+            user_status_id=form.registration_status.data,
+            referrer_mobile=form.referrer_mobile.data,
+            referrer_email=form.referrer_email.data,
+            created_by=current_user.id,
+            updated_by=current_user.id
+        )
         db.session.add(user)
         db.session.commit()
         flash('Congratulations, the user is registered!')
-        a_form_submitted = True    
-    return render_template('user_reg.html', a_form_submitted=a_form_submitted, form=form)
+        return redirect(url_for('user_reg'))
+    return render_template('user_reg.html', form=form)
+
+
+@current_app.route('/api/batches_for_class/<int:class_id>')
+def batches_for_class(class_id):
+    batches = ClassBatch.query.filter_by(class_name_id=class_id).all()
+    return jsonify([{'id': batch.id, 'name': batch.batch_no} for batch in batches])
+
+
+@current_app.route('/api/states_for_country/<int:country_id>')
+def states_for_country(country_id):
+    states = mo.States.query.filter_by(country_id=country_id).all()
+    return jsonify([{'id': state.id, 'name': state.name} for state in states])
+
+
+@current_app.route('/api/cities_for_state/<int:state_id>')
+def cities_for_state(state_id):
+    cities = mo.Cities.query.filter_by(state_id=state_id).all()
+    return jsonify([{'id': city.id, 'name': city.name} for city in cities])
 
 
 @current_app.route('/password', methods=['GET', 'POST'])

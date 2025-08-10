@@ -16,7 +16,7 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 
 import sqlalchemy as sa
 from app import db
-from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, Countries, UserStatusLookup, Contact
+from app.models import User, ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, Countries, UserStatusLookup, Contact, RegStatusLookup
 
 from .config import Config
 
@@ -68,62 +68,67 @@ class UserRegForm(FlaskForm):
     including personal details, contact information, and batch selection.
     The batch choices are dynamically populated from the ClassBatch model.
     """
-    # batch 
-    classname           = SelectField('Select Class', coerce=int) # GLB, HYD
-    classbatch           = SelectField('Select Batch', coerce=int) # B01
-    # personal details
-    username        = TelField('Name', validators=[DataRequired()])
-    mobile          = IntegerField('Mobile with country code', validators=[DataRequired()])
-    whatsapp        = IntegerField('WhatsApp with country code', validators=[DataRequired()])
+    class_name = SelectField('Select Class', coerce=int, validators=[DataRequired()])
+    batch_name = SelectField('Select Batch', coerce=int, validators=[DataRequired()])
     
-    email           = EmailField('Email', validators=[DataRequired(), Email()])
-    gender          = SelectField('Gender', choices=Config.GENDERS, validators=[])
-    # HOMETOWN DETAILS
-    hometowncountry = SelectField('Hometown Country', coerce=int, validators=[DataRequired()])
-    hometownstate   = TelField('Hometown State', validators=[DataRequired()])
-    hometowndistrict = TelField('Hometown District', validators=[DataRequired()])
-    hometowncity    = TelField('Hometown City', validators=[DataRequired()])
-    hometownzip     = TelField('Hometown Pin/Zip', validators=[])
-    # RESIDENCE DETAILS
-    residentcountry = SelectField('Current Residence Country', coerce=int, validators=[DataRequired()])
-    residencestate  = TelField('Current Residence State', validators=[DataRequired()])
-    residencecity   = TelField('Current Residence City', validators=[DataRequired()])
-    residencearea   = TelField('Area in Residence City', validators=[DataRequired()])
-    residentzip     = TelField('Current Residence Pin/Zip', validators=[])
-    # OTHER DETAILS
+    full_name = StringField('Full Name', validators=[DataRequired()], description='Full name of new user being registered')
+    mobile = StringField('Mobile With Country Code', validators=[DataRequired()], description='No symbol or white space. Only integer e.g. 911234567890')
+    whatsapp = StringField('WhatsApp With Country Code', validators=[DataRequired()], description='No symbol or white space. Only integer e.g. 911234567890')
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    gender = SelectField('Gender', choices=[('M', 'M'), ('F', 'F')], validators=[DataRequired()], description='M or F')
+    
+    hometown_country = SelectField('Hometown Country', coerce=int, validators=[DataRequired()])
+    hometown_state = SelectField('Hometown State', coerce=int, validators=[DataRequired()])
+    hometown_district = SelectField('Hometown District', coerce=int, validators=[DataRequired()])
+    hometown_city = StringField('Hometown City', validators=[Length(max=32)])
+
+    current_country = SelectField('Current Residence Country', coerce=int, validators=[DataRequired()])
+    current_state = SelectField('Current Residence State', coerce=int, validators=[DataRequired()])
+    current_city = SelectField('Current Residence City', coerce=int, validators=[DataRequired()])
+
     yob             = IntegerField('Year of Birth', validators=[InputRequired(), NumberRange(min=thisyear - 80, max=thisyear - 10, message="Birthday is not in range or invalid.")])
     education       = TelField('Highest Education', validators=[DataRequired()])
     profession      = TelField('Profession', validators=[DataRequired()])
-    # referral and status
-    referrer_name   = TelField('Referred By Name', validators=[])
-    referrer_mobile = IntegerField('Referred By Mobile', validators=[], default=0)
-    bio             = TextAreaField('Notes', validators=[], render_kw={"rows": 2, "cols": 80})    
-    # referrer_id     = IntegerField('Referred By ID', validators=[], default=0)
-    # Additional fields and submit
-    status          = SelectField('Status', coerce=int, validators=[], default=1) # Registration
-    register        = SubmitField('Register')
+    
+    referrer_name   = TelField('Referrer Name', validators=[])
+    referrer_mobile = StringField('Referred By Mobile', validators=[DataRequired()], description='No symbol or white space. Only integer e.g. 911234567890')
+    referrer_email = EmailField('Referrer Email', validators=[DataRequired(), Email()])
+    referrer_batch = StringField('Referrer Batch', validators=[Length(max=32)])
+
+    any_other_detail    = TextAreaField('Any Other Detail', validators=[], render_kw={"rows": 2, "cols": 80}) 
+    registration_status = SelectField('Registration Status', coerce=int, validators=[DataRequired()])
+    
+    submit = SubmitField('Register')
 
     def __init__(self, *args, **kwargs):
-        """
-        Initializes the UserRegForm.
-
-        It populates the 'batch' dropdown with all available class batches.
-        """
         super(UserRegForm, self).__init__(*args, **kwargs)
-        self.classname.choices = [(c.id, c.name) for c in ClassName.query.all()]
-        self.classbatch.choices = [(b.id, b.batch_no) for b in ClassBatch.query.all()]
-        self.hometowncountry.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
-        self.residentcountry.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
-        self.status.choices = [(s.id, s.status) for s in UserStatusLookup.query.all()]
+        self.hometown_country.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
+        self.current_country.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
+        
+        self.hometown_state.choices = []
+        self.hometown_district.choices = []
+        self.current_state.choices = []
+        self.current_city.choices = []
+  
+        self.class_name.choices = [(c.id, c.name) for c in ClassName.query.all()]
+        self.batch_name.choices = []
 
-    def validate_username(self, username):
-        """Validate username"""
-        user = db.session.scalar(sa.select(User).where(
-            User.username == username.data))
-        if user is not None:
-            raise ValidationError('Please use a different username.')
+        # Set default value for registration_status
+        reg_status = RegStatusLookup.query.filter_by(status='NewRegistration').first()
+        if reg_status:
+            self.registration_status.choices = [(reg_status.id, reg_status.status)]
+            self.registration_status.data = reg_status.id
+        else:
+            self.registration_status.choices = [(s.id, s.status) for s in RegStatusLookup.query.all()]
 
-    
+    def validate_email_mobile(self, email, mobile):
+        """Validate that the email or mobile number is unique."""
+        user = User.query.filter((User.email == self.email.data) | (User.mobile == self.mobile.data)).first()
+        if user:
+            raise ValidationError('A user with that email or mobile number already exists.')
+
+
+
 
 class LocationForm(FlaskForm):
     """A form for selecting a location by country, state, and city.

@@ -414,7 +414,7 @@ class ClassName(BaseModel):
     name: so.Mapped[str] = so.mapped_column(sa.String(8), unique=True, nullable=False)
 
     def __repr__(self):
-        return '<ClassName {}>'.format(self.name)
+        return f'<ClassName {self.name}>'
 
 class ClassBatchStatus(db.Model):
     """ClassBatchStatus lookup table."""
