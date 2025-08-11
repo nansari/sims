@@ -217,6 +217,7 @@ def user_reg():
             user_status_id=form.registration_status.data,
             referrer_mobile=form.referrer_mobile.data,
             referrer_email=form.referrer_email.data,
+            referrer_student_id=form.referrer_student_id.data,
             created_by=current_user.id,
             updated_by=current_user.id
         )

@@ -94,6 +94,7 @@ class UserRegForm(FlaskForm):
     referrer_mobile = StringField('Referrer Mobile', validators=[DataRequired()], description='No symbol or white space. Only integer e.g. 911234567890')
     referrer_email = EmailField('Referrer Email', validators=[DataRequired(), Email()])
     referrer_batch = StringField('Referrer Batch', validators=[Length(max=32)])
+    referrer_student_id = IntegerField('Referrer Student ID', validators=[Optional()])
 
     any_other_detail    = TextAreaField('Any Other Detail', validators=[], render_kw={"rows": 2, "cols": 80}) 
     registration_status = SelectField('Registration Status', coerce=int, validators=[DataRequired()])
