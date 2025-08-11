@@ -213,3 +213,4 @@ migrations/
 .flaskenv
 data/
 instuction.txt
+local_backup/

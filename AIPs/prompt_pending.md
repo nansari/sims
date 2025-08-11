@@ -18,3 +18,20 @@
 - when first time user added, set the column 0 and set pasword file to random password
 - all another colums, int failed_attempt. Increment it on every failed login. After 4 failed login, set allowed filed to 0
 - any point of time, when password ic changed, set it to one
+
+
+---------------
+# Add a Referrer model class
+
+## 1. Add a new model Referrer in models.py with following attributes
+
+  user_id : Foreigky yo  User.id, unique
+  full_name : 64 character string, required, indexed
+  mobile: integer, optional, indexed, primary key
+  email: optional email type, indexed, optional
+  batch: 16 character string, optional
+  referrer_id: integer, optional,
+
+## 2. Add referrer attribute in User model class with relationship with Referrer.user_id and add user attribute in Referrer class to have relationship with User.referrer
+
+## 3. under Update Navigation Menu, add Referrer submenuItem to search a Refreree using User.username, Contact.email or Contact.mobile. Once user is listed, show update button to update all attributes of Referrer model class.

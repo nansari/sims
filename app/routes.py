@@ -14,8 +14,8 @@ from io import BytesIO
 from flask_login import login_user, logout_user, current_user, login_required
 import sqlalchemy as sa
 from app import db, captcha
-from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm, BatchForm
-from app.models import ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, UserStatusLookup, RegStatusLookup
+from app.forms import ClassNameForm, ClassBatchForm, ClassRegionForm, ClassGroupForm, ClassGroupMentorForm, UserStatusForm, StudentGroupForm, ClassBatchTeacherForm, RoleForm, UserRoleForm, ClassBatchStatusForm, BatchForm, ReferrerSearchForm, UpdateReferrerForm
+from app.models import ClassName, ClassBatch, ClassRegion, ClassGroup, ClassGroupMentor, StudentGroup, ClassBatchTeacher, Role, UserRole, ClassBatchStatus, UserStatusLookup, RegStatusLookup, Referrer
 # from app.forms import LoginForm, RegistrationForm
 # from app.models import User
 import app.forms as fo
@@ -211,9 +211,9 @@ def user_reg():
             hometown_state_id=form.hometown_state.data,
             hometown_district_id=form.hometown_district.data,
             hometown_city=form.hometown_city.data,
-            current_country_id=form.current_country.data,
-            current_state_id=form.current_state.data,
-            current_city_id=form.current_city.data,
+            resident_country_id=form.resident_country.data,
+            resident_state_id=form.resident_state.data,
+            resident_city_id=form.resident_city.data,
             user_status_id=form.registration_status.data,
             referrer_mobile=form.referrer_mobile.data,
             referrer_email=form.referrer_email.data,
@@ -1468,3 +1468,52 @@ def remove_passwords():
     else:
         flash('No users were selected.', 'warning')
     return redirect(url_for('search_user_password'))
+
+@current_app.route('/search_referrer', methods=['GET', 'POST'])
+@login_required
+def search_referrer():
+    form = ReferrerSearchForm()
+    users = []
+    if form.validate_on_submit():
+        search_term = form.search.data
+        users = db.session.query(mo.User).join(mo.User.contact).filter(
+            sa.or_(
+                mo.User.username.ilike(f'%{search_term}%'),
+                mo.Contact.email.ilike(f'%{search_term}%'),
+                mo.Contact.mobile.ilike(f'%{search_term}%')
+            )
+        ).all()
+    return render_template('search_referrer_results.html', title='Search Referrer', form=form, users=users)
+
+
+@current_app.route('/update_referrer/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def update_referrer(user_id):
+    user = db.session.get(mo.User, user_id)
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('search_referrer'))
+    referrer = db.session.scalar(sa.select(Referrer).where(Referrer.user_id == user_id))
+    form = UpdateReferrerForm(obj=referrer)
+    if form.validate_on_submit():
+        if referrer:
+            referrer.full_name = form.full_name.data
+            referrer.mobile = form.mobile.data
+            referrer.email = form.email.data
+            referrer.batch = form.batch.data
+            referrer.referrer_id = form.referrer_id.data
+            flash(f'Referrer details for <a href="{url_for('user_profile', username=user.username)}">{user.username}</a> updated.')
+        else:
+            referrer = Referrer(
+                user_id=user_id,
+                full_name=form.full_name.data,
+                mobile=form.mobile.data,
+                email=form.email.data,
+                batch=form.batch.data,
+                referrer_id=form.referrer_id.data
+            )
+            db.session.add(referrer)
+            flash(f'Referrer details for <a href="{url_for('user_profile', username=user.username)}">{user.username}</a> added.')
+        db.session.commit()
+        return redirect(url_for('search_referrer'))
+    return render_template('update_referrer.html', title='Update Referrer', form=form, user=user)

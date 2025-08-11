@@ -161,16 +161,16 @@
         <fieldset>
             <legend>Current Residence</legend>
             <div class="form-field">
-                {{ form.current_country.label }}
-                {{ form.current_country() }}
+                {{ form.resident_country.label }}
+                {{ form.resident_country() }}
             </div>
             <div class="form-field">
-                {{ form.current_state.label }}
-                {{ form.current_state() }}
+                {{ form.resident_state.label }}
+                {{ form.resident_state() }}
             </div>
             <div class="form-field">
-                {{ form.current_city.label }}
-                {{ form.current_city() }}
+                {{ form.resident_city.label }}
+                {{ form.resident_city() }}
             </div>
         </fieldset>
 
@@ -260,8 +260,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupCascadingDropdown('class_name', 'batch_name', '/api/batches_for_class/PLACEHOLDER');
     setupCascadingDropdown('hometown_country', 'hometown_state', '/api/states_for_country/PLACEHOLDER');
     setupCascadingDropdown('hometown_state', 'hometown_district', '/api/cities_for_state/PLACEHOLDER');
-    setupCascadingDropdown('current_country', 'current_state', '/api/states_for_country/PLACEHOLDER');
-    setupCascadingDropdown('current_state', 'current_city', '/api/cities_for_state/PLACEHOLDER');
+    setupCascadingDropdown('resident_country', 'resident_state', '/api/states_for_country/PLACEHOLDER');
+    setupCascadingDropdown('resident_state', 'resident_city', '/api/cities_for_state/PLACEHOLDER');
 });
 </script>
 {% endblock %}

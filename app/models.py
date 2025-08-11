@@ -64,10 +64,26 @@ class User(UserMixin, db.Model):
     user_dua: so.Mapped[list['UserDua']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserDua.user_id')
     aamal: so.Mapped['Aaamal'] = so.relationship(back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='Aaamal.user_id')
     roles: so.Mapped[list['UserRole']] = so.relationship(back_populates='user', cascade='all, delete-orphan', foreign_keys='UserRole.user_id')
+    referrer: so.Mapped['Referrer'] = so.relationship('Referrer', back_populates='user', cascade='all, delete-orphan', uselist=False, foreign_keys='Referrer.user_id')
+
     @property
     def email(self) -> str:
         """Access email from related Contact."""
         return self.contact.email if self.contact else None
+
+
+class Referrer(db.Model):
+    """Referrer model."""
+    __table_args__ = {'extend_existing': True}
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), unique=True, nullable=False)
+    full_name: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, nullable=False)
+    mobile: so.Mapped[int] = so.mapped_column(sa.BigInteger, index=True, nullable=True)
+    email: so.Mapped[str] = so.mapped_column(EmailType, index=True, nullable=True)
+    batch: so.Mapped[str] = so.mapped_column(sa.String(16), nullable=True)
+    referrer_id: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+
+    user: so.Mapped['User'] = so.relationship('User', back_populates='referrer', foreign_keys=[user_id])
 
 
 class Contact(BaseModel):

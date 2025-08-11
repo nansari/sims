@@ -82,16 +82,16 @@ class UserRegForm(FlaskForm):
     hometown_district = SelectField('Hometown District', coerce=int, validators=[DataRequired()])
     hometown_city = StringField('Hometown City', validators=[Length(max=32)])
 
-    current_country = SelectField('Current Residence Country', coerce=int, validators=[DataRequired()])
-    current_state = SelectField('Current Residence State', coerce=int, validators=[DataRequired()])
-    current_city = SelectField('Current Residence City', coerce=int, validators=[DataRequired()])
+    resident_country = SelectField('Current Residence Country', coerce=int, validators=[DataRequired()])
+    resident_state = SelectField('Current Residence State', coerce=int, validators=[DataRequired()])
+    resident_city = SelectField('Current Residence City', coerce=int, validators=[DataRequired()])
 
     yob             = IntegerField('Year of Birth', validators=[InputRequired(), NumberRange(min=thisyear - 80, max=thisyear - 10, message="Birthday is not in range or invalid.")])
     education       = TelField('Highest Education', validators=[DataRequired()])
     profession      = TelField('Profession', validators=[DataRequired()])
     
     referrer_name   = TelField('Referrer Name', validators=[])
-    referrer_mobile = StringField('Referred By Mobile', validators=[DataRequired()], description='No symbol or white space. Only integer e.g. 911234567890')
+    referrer_mobile = StringField('Referrer Mobile', validators=[DataRequired()], description='No symbol or white space. Only integer e.g. 911234567890')
     referrer_email = EmailField('Referrer Email', validators=[DataRequired(), Email()])
     referrer_batch = StringField('Referrer Batch', validators=[Length(max=32)])
 
@@ -103,12 +103,12 @@ class UserRegForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(UserRegForm, self).__init__(*args, **kwargs)
         self.hometown_country.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
-        self.current_country.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
+        self.resident_country.choices = [(c.id, c.name) for c in Countries.query.order_by(Countries.name).all()]
         
         self.hometown_state.choices = []
         self.hometown_district.choices = []
-        self.current_state.choices = []
-        self.current_city.choices = []
+        self.resident_state.choices = []
+        self.resident_city.choices = []
   
         self.class_name.choices = [(c.id, c.name) for c in ClassName.query.all()]
         self.batch_name.choices = []
@@ -343,4 +343,16 @@ class SearchClassGroupForm(FlaskForm):
     search = StringField('Search', validators=[DataRequired()])
     submit = SubmitField('Search')
 
+class ReferrerSearchForm(FlaskForm):
+    """Referrer search form."""
+    search = StringField('Search', validators=[DataRequired()])
+    submit = SubmitField('Search')
 
+class UpdateReferrerForm(FlaskForm):
+    """Update referrer form."""
+    full_name = StringField('Full Name', validators=[DataRequired(), Length(max=64)])
+    mobile = IntegerField('Mobile')
+    email = StringField('Email', validators=[Email(), Length(max=120)])
+    batch = StringField('Batch', validators=[Length(max=16)])
+    referrer_id = IntegerField('Referrer ID')
+    submit = SubmitField('Update')
