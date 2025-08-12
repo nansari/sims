@@ -1,6 +1,7 @@
 """This is the main application package."""
 # app/__init__.py
-
+import os
+import socket
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -17,6 +18,11 @@ def create_app():
     """Create and configure the Flask application."""""
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Enable debug mode on development servers
+    if socket.gethostname().startswith(Config.DEVELOPMENT_SERVER):
+        # app.debug = True
+        os.environ['FLASK_DEBUG'] = '1'
 
     db.init_app(app)
     migrate.init_app(app, db)

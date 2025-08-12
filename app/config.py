@@ -40,3 +40,4 @@ class Config:
     CAPTCHA_WIDTH = 160
     CAPTCHA_HEIGHT = 60
     SESSION_TYPE = 'filesystem'
+    DEVELOPMENT_SERVER = ('DESKTOP-RLGODEE', 'server-does-not-exit')
