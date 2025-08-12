@@ -214,3 +214,4 @@ migrations/
 data/
 instuction.txt
 local_backup/
+sims.log

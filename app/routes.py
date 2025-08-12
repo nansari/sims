@@ -9,7 +9,16 @@ for fetching data dynamically.
 """
 import json
 from urllib.parse import urlsplit
-from flask import render_template, flash, redirect, url_for, request, send_file, jsonify, current_app
+import json
+import time
+import logging
+from urllib.parse import urlsplit
+from flask import render_template, flash, redirect, url_for, request, send_file, jsonify, current_app, session
+from app.config import Config
+
+# Configure logging
+logging.basicConfig(filename=Config.LOGFILE, level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 from io import BytesIO
 from flask_login import login_user, logout_user, current_user, login_required
 import sqlalchemy as sa
@@ -58,21 +67,25 @@ def login():
             
             if not user:
                 flash('Invalid email or password', 'danger')
+                logging.info(f"Login denied: Invalid email or password for email: {form.email.data} from IP: {request.remote_addr} User-Agent: {request.user_agent}") # Log denied
                 return redirect(url_for('login'))
 
             password_hash = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
 
             if not password_hash or not mo.Password.check_password(password_hash, form.password.data):
                 flash('Invalid email or password', 'danger')
+                logging.info(f"Login denied: Invalid email or password for email: {form.email.data} from IP: {request.remote_addr} User-Agent: {request.user_agent}") # Log denied
                 return redirect(url_for('login'))
 
             login_user(user, remember=form.remember_me.data)
+            logging.info(f"Login successful for user: {user.username} (email: {form.email.data}) from IP: {request.remote_addr} User-Agent: {request.user_agent}") # Log successful
             next_page = request.args.get('next')
             if not next_page or urlsplit(next_page).netloc != '':
                 next_page = url_for('index')
             return redirect(next_page)
         else:
             flash('Invalid captcha. Please try again.', 'danger')
+            logging.info(f"Login denied: Invalid captcha for email: {form.email.data} from IP: {request.remote_addr} User-Agent: {request.user_agent}") # Log denied
     return render_template('login.html', title='Sign In', form=form)
 
 @login_required

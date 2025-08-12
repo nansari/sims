@@ -34,6 +34,7 @@ class Config:
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///c:/Users/nasim/Documents/git/sims/data/sqlite3_bin/app.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     GENDERS = ['M', 'F']
+    LOGFILE = os.path.join(basedir, 'sims.log')
     # Flask-Session-Captcha
     CAPTCHA_ENABLE = True
     CAPTCHA_LENGTH = 6
