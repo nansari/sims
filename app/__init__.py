@@ -21,8 +21,8 @@ def create_app():
 
     # Enable debug mode on development servers
     if socket.gethostname().startswith(Config.DEVELOPMENT_SERVER):
-        # app.debug = True
         os.environ['FLASK_DEBUG'] = '1'
+        os.environ['FLASK_ENV'] = 'development'
 
     db.init_app(app)
     migrate.init_app(app, db)
