@@ -286,13 +286,14 @@ def set_password(user_id):
     form = fo.AdminChangePasswordForm()
     if form.validate_on_submit():
         password = db.session.scalar(sa.select(mo.Password).where(mo.Password.user_id == user.id))
+        profile_url = url_for('user_profile', username=user.username)
         if password:
             password.password_hash = generate_password_hash(form.password.data)
-            flash(f'Password for <a href="{url_for('user_profile', username=user.username)}">{user.username}</a> updated.')
+            flash(f'Password for <a href="{profile_url}">{user.username}</a> updated.')
         else:
             password = mo.Password(user_id=user.id, password_hash=generate_password_hash(form.password.data))
             db.session.add(password)
-            flash(f'Password for <a href="{url_for('user_profile', username=user.username)}">{user.username}</a> added.')
+            flash(f'Password for <a href="{profile_url}">{user.username}</a> added.')
         db.session.commit()
         return redirect(url_for('password'))
     return render_template('set_password.html', title='Set Password', form=form, user=user)
@@ -1510,13 +1511,14 @@ def update_referrer(user_id):
     referrer = db.session.scalar(sa.select(Referrer).where(Referrer.user_id == user_id))
     form = UpdateReferrerForm(obj=referrer)
     if form.validate_on_submit():
+        profile_url = url_for('user_profile', username=user.username)
         if referrer:
             referrer.full_name = form.full_name.data
             referrer.mobile = form.mobile.data
             referrer.email = form.email.data
             referrer.batch = form.batch.data
             referrer.referrer_id = form.referrer_id.data
-            flash(f'Referrer details for <a href="{url_for('user_profile', username=user.username)}">{user.username}</a> updated.')
+            flash(f'Referrer details for <a href="{profile_url}">{user.username}</a> updated.')
         else:
             referrer = Referrer(
                 user_id=user_id,
@@ -1527,7 +1529,7 @@ def update_referrer(user_id):
                 referrer_id=form.referrer_id.data
             )
             db.session.add(referrer)
-            flash(f'Referrer details for <a href="{url_for('user_profile', username=user.username)}">{user.username}</a> added.')
+            flash(f'Referrer details for <a href="{profile_url}">{user.username}</a> added.')
         db.session.commit()
         return redirect(url_for('search_referrer'))
     return render_template('update_referrer.html', title='Update Referrer', form=form, user=user)
